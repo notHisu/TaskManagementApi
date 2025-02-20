@@ -39,7 +39,7 @@ namespace TaskManagementApi.Controllers
         public ActionResult<TaskItem> AddTask(TaskItem task)
         {
             _taskService.AddTask(task);
-            return CreatedAtRoute("GetTaskById", new { id = task.Id }, task);
+            return CreatedAtAction("GetTaskById", new { id = task.Id }, task);
         }
 
         [HttpPut("{id}", Name = "UpdateTask")]

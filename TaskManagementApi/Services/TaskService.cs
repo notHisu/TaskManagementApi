@@ -5,10 +5,11 @@ using TaskManagementApi.Models;
 
 public class TaskService : ITaskService
 {
-    private readonly List<TaskItem> _tasks = new List<TaskItem>();
+    private readonly List<TaskItem> _tasks;
 
     public TaskService()
     {
+        _tasks = new List<TaskItem>();
         // Adding some initial tasks
         _tasks.Add(new TaskItem { Id = 1, Title = "Learn ASP.NET Core", Description = "Study the basics of ASP.NET Core framework and its components", IsCompleted = false });
         _tasks.Add(new TaskItem { Id = 2, Title = "Create a new project", Description = "Set up a new ASP.NET Core project using Visual Studio or Visual Studio Code", IsCompleted = false });
