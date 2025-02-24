@@ -22,7 +22,7 @@ namespace TaskManagementApi.Repositories
             _context.SaveChanges();
         }
 
-        public void Delete(int id)
+        public void Delete(int id, int? secondId = null)
         {
             var taskComment = _context.TaskComments.FirstOrDefault(c => c.Id == id);
 
@@ -42,7 +42,7 @@ namespace TaskManagementApi.Repositories
             var taskComment = _context.TaskComments.FirstOrDefault(x => x.Id == id);
             
             if(taskComment == null) {
-                throw new InvalidOperationException("TaskComment not found");
+                throw new NullReferenceException("TaskComment not found");
             }
             
             return taskComment;

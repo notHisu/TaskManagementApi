@@ -23,11 +23,20 @@ namespace TaskManagementApi.Controllers
             return Ok(taskLabels);
         }
 
+
+
         [HttpPost(Name = "AddLabelToTask")]
         public ActionResult<TaskLabel> AddLabelToTask(TaskLabel taskLabel)
         {
             _taskLabelRepository.Add(taskLabel);
-            return CreatedAtAction("GetTaskLabelById", new { taskId = taskLabel.TaskId, labelId = taskLabel.LabelId }, taskLabel);
+            return Ok(taskLabel);
+        }
+
+        [HttpDelete("{taskId}/{labelId}", Name = "DeleteTaskLabel")]
+        public ActionResult DeleteTaskLabel(int taskId, int labelId)
+        {
+            _taskLabelRepository.Delete(taskId, labelId);
+            return NoContent();
         }
 
     }

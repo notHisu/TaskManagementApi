@@ -14,13 +14,44 @@ namespace TaskManagementApi.Repositories
 
         public void Add(TaskLabel entity)
         {
+            if(entity == null)
+            {
+                throw new ArgumentNullException("TaskLabel cannot be null");
+            }
+
+            var task = _context.TaskItems.FirstOrDefault(t => t.Id == entity.TaskId);
+            var label = _context.Labels.FirstOrDefault(label => label.Id == entity.LabelId);
+
+            if(task == null)
+            {
+                throw new NullReferenceException("Task not found");
+            }
+
+            if(label == null)
+            {
+                throw new NullReferenceException("Label not found");
+            }
+
+            var taskLabel = _context.TaskLabels.Find(entity.TaskId, entity.LabelId);
+
+            if(taskLabel != null)
+            {
+                throw new Exception("Already exists");
+            }
+                        
             _context.TaskLabels.Add(entity);
             _context.SaveChanges();
         }
 
-        public void Delete(int id)
+        public void Delete(int taskId, int? labelId = null)
         {
-            throw new NotImplementedException();
+            var taskLabel = _context.TaskLabels.Find(taskId, labelId);
+            if(taskLabel == null) {
+                throw new NullReferenceException("TaskLabel not found");
+            }
+
+            _context.TaskLabels.Remove(taskLabel);
+            _context.SaveChanges();
         }
 
         public IEnumerable<TaskLabel> GetAll()

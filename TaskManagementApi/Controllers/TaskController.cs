@@ -14,7 +14,6 @@ namespace TaskManagementApi.Controllers
 
         private readonly IGenericRepository<TaskItem> _taskRepository;
 
-
         public TaskController(IGenericRepository<TaskItem> taskRepository)
         {
             _taskRepository = taskRepository;

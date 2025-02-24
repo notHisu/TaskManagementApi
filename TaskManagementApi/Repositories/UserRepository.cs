@@ -65,7 +65,7 @@ namespace TaskManagementApi.Repositories
             }
             else
             {
-                throw new InvalidOperationException("User not found");
+                throw new NullReferenceException("User not found");
             }
         }
 
@@ -84,7 +84,7 @@ namespace TaskManagementApi.Repositories
             }
             else
             {
-                throw new InvalidOperationException("User not found");
+                throw new NullReferenceException("User not found");
             }
         }
 

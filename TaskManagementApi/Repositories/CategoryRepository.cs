@@ -16,14 +16,14 @@ namespace TaskManagementApi.Repositories
         {
             if(entity == null)
             {
-                throw new System.ArgumentNullException("Category cannot be null");
+                throw new ArgumentNullException("Category cannot be null");
             }
 
             _context.Categories.Add(entity);
             _context.SaveChanges();
         }
 
-        public void Delete(int id)
+        public void Delete(int id, int? secondId = null)
         {
             var category = _context.Categories.FirstOrDefault(c => c.Id == id);
 
@@ -44,7 +44,7 @@ namespace TaskManagementApi.Repositories
             var category = _context.Categories.FirstOrDefault(c => c.Id == id);
             if (category == null)
             {
-                throw new InvalidOperationException("Category not found.");
+                throw new NullReferenceException("Category not found.");
             }
             return category;
         }
@@ -53,7 +53,7 @@ namespace TaskManagementApi.Repositories
         {
             if(entity == null)
             {
-                throw new System.ArgumentNullException("Category cannot be null");
+                throw new ArgumentNullException("Category cannot be null");
             }
 
             _context.Categories.Update(entity);

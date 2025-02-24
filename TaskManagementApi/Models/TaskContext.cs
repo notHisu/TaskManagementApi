@@ -14,6 +14,7 @@ namespace TaskManagementApi.Models
         public DbSet<Category> Categories { get; set; }
         public DbSet<TaskComment> TaskComments { get; set; }
         public DbSet<TaskLabel> TaskLabels { get; set; }
+        public DbSet<Label> Labels { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

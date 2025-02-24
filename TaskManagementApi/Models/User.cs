@@ -14,6 +14,7 @@ namespace TaskManagementApi.Models
         [Required]
         public required string PasswordHash { get; set; }
 
+        [JsonIgnore]
         public ICollection<TaskItem>? Tasks { get; set; }
     }
 }
