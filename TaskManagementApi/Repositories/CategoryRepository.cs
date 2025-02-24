@@ -1,0 +1,43 @@
+﻿using TaskManagementApi.Interfaces;
+using TaskManagementApi.Models;
+
+namespace TaskManagementApi.Repositories
+{
+    public class CategoryRepository : IGenericRepository<Category>
+    {
+        private readonly TaskContext _context;
+
+        public CategoryRepository(TaskContext context)
+        {
+            _context = context;
+        }
+
+        public void Add(Category entity)
+        {
+            _context.Categories.Add(entity);
+            _context.SaveChanges();
+        }
+
+        public void Delete(int id)
+        {
+            _context.Categories.Remove(GetById(id)!);
+            _context.SaveChanges();
+        }
+
+        public IEnumerable<Category> GetAll()
+        {
+            return _context.Categories.ToList();
+        }
+
+        public Category? GetById(int id)
+        {
+            return _context.Categories.FirstOrDefault(x => x.Id == id);
+        }
+
+        public void Update(Category entity)
+        {
+            _context.Categories.Update(entity);
+            _context.SaveChanges();
+        }
+    }
+}
