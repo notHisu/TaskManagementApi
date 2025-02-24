@@ -47,7 +47,11 @@ namespace TaskManagementApi.Repositories
 
         public void Delete(int id)
         {
-            _context.Users.Remove(_context.Users.Find(id));
+            var user = _context.Users.FirstOrDefault(x => x.Id == id);
+            if(user != null)
+            {
+                _context.Users.Remove(_context.Users.Find(id)!);
+            }
         }
 
         public IEnumerable<UserResponseDto> GetAll()

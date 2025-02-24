@@ -23,6 +23,16 @@ namespace TaskManagementApi.Controllers
             return Ok(categories);
         }
 
+        [HttpGet("{id}", Name = "GetCategoryById")]
+        public ActionResult GetCategoryById(int id) {
+            var category = _categoryRepository.GetById(id);
+            if (category == null)
+            {
+                return NotFound();
+            }
+            return Ok(category);
+        }
+
         [HttpPost(Name = "AddCategory")]
         public ActionResult<Category> AddCategory(Category category)
         {
