@@ -1,4 +1,5 @@
-﻿using TaskManagementApi.Interfaces;
+﻿using Microsoft.EntityFrameworkCore;
+using TaskManagementApi.Interfaces;
 using TaskManagementApi.Models;
 
 namespace TaskManagementApi.Repositories
@@ -35,6 +36,11 @@ namespace TaskManagementApi.Repositories
 
         public void Update(TaskItem entity)
         {
+            var existingEntity = _context.TaskItems.Find(entity.Id);
+            if (existingEntity != null)
+            {
+                _context.Entry(existingEntity).State = EntityState.Detached;
+            }
             _context.TaskItems.Update(entity);
             _context.SaveChanges();
         }

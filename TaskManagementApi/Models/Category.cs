@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace TaskManagementApi.Models
 {
@@ -10,7 +11,9 @@ namespace TaskManagementApi.Models
         public required string Name { get; set; }
         public string? Description { get; set; }
 
-        public ICollection<TaskItem>? Tasks { get; set; } = new List<TaskItem>();
+
+        [JsonIgnore]
+        public ICollection<TaskItem>? Tasks { get; set; } 
     }
 
     public class CategoryDto

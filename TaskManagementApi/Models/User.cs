@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace TaskManagementApi.Models
 {
@@ -13,6 +14,6 @@ namespace TaskManagementApi.Models
         [Required]
         public required string PasswordHash { get; set; }
 
-        public ICollection<TaskItem>? Tasks { get; set; } = new List<TaskItem>();
+        public ICollection<TaskItem>? Tasks { get; set; }
     }
 }

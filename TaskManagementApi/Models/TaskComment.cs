@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace TaskManagementApi.Models
 {
@@ -12,7 +13,10 @@ namespace TaskManagementApi.Models
         public required string Content { get; set; }
         public DateTime CreatedAt { get; set; }
 
+        [JsonIgnore]
         public User? User { get; set; }
+
+        [JsonIgnore]
         public TaskItem? Task { get; set; }
     }
 }
