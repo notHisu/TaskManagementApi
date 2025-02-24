@@ -44,7 +44,7 @@ namespace TaskManagementApi.Repositories
             var category = _context.Categories.FirstOrDefault(c => c.Id == id);
             if (category == null)
             {
-                throw new NullReferenceException("Category not found.");
+                throw new InvalidOperationException("Category not found.");
             }
             return category;
         }

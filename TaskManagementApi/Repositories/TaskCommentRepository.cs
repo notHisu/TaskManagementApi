@@ -42,7 +42,7 @@ namespace TaskManagementApi.Repositories
             var taskComment = _context.TaskComments.FirstOrDefault(x => x.Id == id);
             
             if(taskComment == null) {
-                throw new NullReferenceException("TaskComment not found");
+                throw new InvalidOperationException("TaskComment not found");
             }
             
             return taskComment;

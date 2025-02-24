@@ -1,4 +1,5 @@
-﻿using TaskManagementApi.Interfaces;
+﻿using Microsoft.EntityFrameworkCore;
+using TaskManagementApi.Interfaces;
 using TaskManagementApi.Models;
 
 namespace TaskManagementApi.Repositories
@@ -14,31 +15,30 @@ namespace TaskManagementApi.Repositories
 
         public void Add(TaskLabel entity)
         {
-            if(entity == null)
+            if (entity == null)
             {
-                throw new ArgumentNullException("TaskLabel cannot be null");
+                throw new ArgumentNullException(nameof(entity), "TaskLabel cannot be null");
             }
 
-            var task = _context.TaskItems.FirstOrDefault(t => t.Id == entity.TaskId);
-            var label = _context.Labels.FirstOrDefault(label => label.Id == entity.LabelId);
+            var taskExists = _context.TaskItems.Any(t => t.Id == entity.TaskId);
+            var labelExists = _context.Labels.Any(l => l.Id == entity.LabelId);
 
-            if(task == null)
+            if (!taskExists)
             {
-                throw new NullReferenceException("Task not found");
+                throw new InvalidOperationException("Task not found");
             }
 
-            if(label == null)
+            if (!labelExists)
             {
-                throw new NullReferenceException("Label not found");
+                throw new InvalidOperationException("Label not found");
             }
 
-            var taskLabel = _context.TaskLabels.Find(entity.TaskId, entity.LabelId);
-
-            if(taskLabel != null)
+            var existingTaskLabel = _context.TaskLabels.Find(entity.TaskId, entity.LabelId);
+            if (existingTaskLabel != null)
             {
-                throw new Exception("Already exists");
+                throw new InvalidOperationException("This task label pair already exists");
             }
-                        
+
             _context.TaskLabels.Add(entity);
             _context.SaveChanges();
         }
@@ -46,8 +46,9 @@ namespace TaskManagementApi.Repositories
         public void Delete(int taskId, int? labelId = null)
         {
             var taskLabel = _context.TaskLabels.Find(taskId, labelId);
-            if(taskLabel == null) {
-                throw new NullReferenceException("TaskLabel not found");
+            if (taskLabel == null)
+            {
+                throw new Exception("TaskLabel not found");
             }
 
             _context.TaskLabels.Remove(taskLabel);
@@ -66,12 +67,12 @@ namespace TaskManagementApi.Repositories
 
         public void Update(TaskLabel entity)
         {
-            if(entity == null)
+            if (entity == null)
             {
-                throw new ArgumentNullException("TaskLabel cannot be null");
+                throw new ArgumentNullException(nameof(entity), "TaskLabel cannot be null");
             }
 
-            _context.TaskLabels.Update(entity);
+            _context.Entry(entity).State = EntityState.Modified;
             _context.SaveChanges();
         }
     }
