@@ -22,6 +22,11 @@ namespace TaskManagementApi.Repositories
 
         private static UserResponseDto ToDto(User user)
         {
+            if(user == null)
+            {
+                throw new ArgumentNullException(nameof(user));
+            }
+
             return new UserResponseDto
             {
                 Id = user.Id,
@@ -32,6 +37,11 @@ namespace TaskManagementApi.Repositories
 
         public UserResponseDto Add(UserCreateDto createDto)
         {
+            if(createDto == null)
+            {
+                throw new ArgumentNullException(nameof(createDto));
+            }
+
             var user = new User
             {
                 Username = createDto.Username,
@@ -48,9 +58,14 @@ namespace TaskManagementApi.Repositories
         public void Delete(int id)
         {
             var user = _context.Users.FirstOrDefault(x => x.Id == id);
+
             if(user != null)
             {
                 _context.Users.Remove(_context.Users.Find(id)!);
+            }
+            else
+            {
+                throw new InvalidOperationException("User not found");
             }
         }
 
@@ -62,7 +77,15 @@ namespace TaskManagementApi.Repositories
         public UserResponseDto? GetById(int id)
         {
             var user = _context.Users.FirstOrDefault(x => x.Id == id);
-            return user != null ? ToDto(user) : null;
+
+            if (user != null)
+            {
+                return ToDto(user);
+            }
+            else
+            {
+                throw new InvalidOperationException("User not found");
+            }
         }
 
         public UserResponseDto? Update(int id, UserUpdateDto updateDto)
@@ -88,11 +111,14 @@ namespace TaskManagementApi.Repositories
         public UserResponseDto? ValidateCredentials(string username, string password)
         {
             var hashedPassword = HashPassword(password);
+
             var user = _context.Users.FirstOrDefault(u => 
                 u.Username == username && 
                 u.PasswordHash == hashedPassword);
-            
-            return user != null ? ToDto(user) : null;
+
+            if(user == null) return null;
+
+            return ToDto(user);
         }
     }
 }

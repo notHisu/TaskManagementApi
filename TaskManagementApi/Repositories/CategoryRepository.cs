@@ -14,14 +14,24 @@ namespace TaskManagementApi.Repositories
 
         public void Add(Category entity)
         {
+            if(entity == null)
+            {
+                throw new System.ArgumentNullException("Category cannot be null");
+            }
+
             _context.Categories.Add(entity);
             _context.SaveChanges();
         }
 
         public void Delete(int id)
         {
-            _context.Categories.Remove(GetById(id)!);
-            _context.SaveChanges();
+            var category = _context.Categories.FirstOrDefault(c => c.Id == id);
+
+            if (category != null)
+            {
+                _context.Categories.Remove(category);
+                _context.SaveChanges();
+            }
         }
 
         public IEnumerable<Category> GetAll()
@@ -31,11 +41,21 @@ namespace TaskManagementApi.Repositories
 
         public Category? GetById(int id)
         {
-            return _context.Categories.FirstOrDefault(x => x.Id == id);
+            var category = _context.Categories.FirstOrDefault(c => c.Id == id);
+            if (category == null)
+            {
+                throw new InvalidOperationException("Category not found.");
+            }
+            return category;
         }
 
         public void Update(Category entity)
         {
+            if(entity == null)
+            {
+                throw new System.ArgumentNullException("Category cannot be null");
+            }
+
             _context.Categories.Update(entity);
             _context.SaveChanges();
         }

@@ -13,14 +13,23 @@ namespace TaskManagementApi.Repositories
         }
         public void Add(TaskComment entity)
         {
+            if(entity == null)
+            {
+                throw new ArgumentNullException("TaskComment cannot be null");
+            }
+
             _context.TaskComments.Add(entity);
             _context.SaveChanges();
         }
 
         public void Delete(int id)
         {
-            _context.TaskComments.Remove(GetById(id)!);
-            _context.SaveChanges();
+            var taskComment = _context.TaskComments.FirstOrDefault(c => c.Id == id);
+
+            if(taskComment != null) {
+                _context.TaskComments.Remove(taskComment);
+                _context.SaveChanges();
+            }
         }
 
         public IEnumerable<TaskComment> GetAll()
@@ -30,11 +39,22 @@ namespace TaskManagementApi.Repositories
 
         public TaskComment? GetById(int id)
         {
-            return _context.TaskComments.FirstOrDefault(x => x.Id == id);
+            var taskComment = _context.TaskComments.FirstOrDefault(x => x.Id == id);
+            
+            if(taskComment == null) {
+                throw new InvalidOperationException("TaskComment not found");
+            }
+            
+            return taskComment;
         }
 
         public void Update(TaskComment entity)
         {
+            if(entity == null)
+            {
+                throw new ArgumentNullException("TaskComment cannot be null");
+            }
+
             _context.TaskComments.Update(entity);
             _context.SaveChanges();
         }

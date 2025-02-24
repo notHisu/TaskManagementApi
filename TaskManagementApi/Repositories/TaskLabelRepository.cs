@@ -20,7 +20,7 @@ namespace TaskManagementApi.Repositories
 
         public void Delete(int id)
         {
-            _context.TaskLabels.Remove(GetById(id)!);
+            throw new NotImplementedException();
         }
 
         public IEnumerable<TaskLabel> GetAll()
@@ -30,11 +30,16 @@ namespace TaskManagementApi.Repositories
 
         public TaskLabel? GetById(int id)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public void Update(TaskLabel entity)
         {
+            if(entity == null)
+            {
+                throw new ArgumentNullException("TaskLabel cannot be null");
+            }
+
             _context.TaskLabels.Update(entity);
             _context.SaveChanges();
         }
