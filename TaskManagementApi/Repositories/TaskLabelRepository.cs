@@ -48,7 +48,7 @@ namespace TaskManagementApi.Repositories
             var taskLabel = _context.TaskLabels.Find(taskId, labelId);
             if (taskLabel == null)
             {
-                throw new Exception("TaskLabel not found");
+                throw new InvalidOperationException("TaskLabel not found");
             }
 
             _context.TaskLabels.Remove(taskLabel);
@@ -57,12 +57,17 @@ namespace TaskManagementApi.Repositories
 
         public IEnumerable<TaskLabel> GetAll()
         {
-            return _context.TaskLabels.ToList();
+             return _context.TaskLabels.ToList();
         }
 
-        public TaskLabel? GetById(int id)
+        public TaskLabel? GetById(int id, int? secondId = null)
         {
-            throw new NotImplementedException();
+            var entity = _context.TaskLabels.Find(id, secondId);
+            if (entity == null) {
+                throw new InvalidOperationException("TaskLabel not found");
+            }
+
+            return entity;
         }
 
         public void Update(TaskLabel entity)

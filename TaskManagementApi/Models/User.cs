@@ -12,6 +12,9 @@ namespace TaskManagementApi.Models
         public string? Email { get; set; }
 
         [Required]
+        public required string PasswordSalt { get; set; }  
+
+        [Required]
         public required string PasswordHash { get; set; }
 
         [JsonIgnore]

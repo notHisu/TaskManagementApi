@@ -39,7 +39,7 @@ namespace TaskManagementApi.Repositories
             return _context.Categories.ToList();
         }
 
-        public Category? GetById(int id)
+        public Category? GetById(int id, int? secondId = null)
         {
             var category = _context.Categories.FirstOrDefault(c => c.Id == id);
             if (category == null)

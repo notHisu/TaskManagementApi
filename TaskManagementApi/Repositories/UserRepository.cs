@@ -8,21 +8,36 @@ namespace TaskManagementApi.Repositories
     public class UserRepository : IUserRepository<UserResponseDto>
     {
         private readonly TaskContext _context;
-        
-        public UserRepository(TaskContext context) {
+
+        public UserRepository(TaskContext context)
+        {
             _context = context;
         }
 
-        private static string HashPassword(string password)
+        private static string GenerateSalt()
         {
-            using var sha256 = SHA256.Create();
-            var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
-            return Convert.ToBase64String(hashedBytes);
+            byte[] salt = new byte[16];
+            using (var rng = RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(salt);
+            }
+
+            return Convert.ToBase64String(salt);
+        }
+
+        private static string HashPassword(string password, string salt)
+        {
+            using (var sha256 = SHA256.Create())
+            {
+                var saltedPassword = password + salt;
+                byte[] hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(saltedPassword));
+                return Convert.ToBase64String(hashedBytes);
+            }
         }
 
         private static UserResponseDto ToDto(User user)
         {
-            if(user == null)
+            if (user == null)
             {
                 throw new ArgumentNullException(nameof(user));
             }
@@ -37,21 +52,23 @@ namespace TaskManagementApi.Repositories
 
         public UserResponseDto Add(UserCreateDto createDto)
         {
-            if(createDto == null)
+            if (createDto == null)
             {
                 throw new ArgumentNullException(nameof(createDto));
             }
 
+            var salt = GenerateSalt();
             var user = new User
             {
                 Username = createDto.Username,
                 Email = createDto.Email,
-                PasswordHash = HashPassword(createDto.Password)
+                PasswordHash = HashPassword(createDto.Password, salt),
+                PasswordSalt = salt
             };
 
             _context.Users.Add(user);
             _context.SaveChanges();
-            
+
             return ToDto(user);
         }
 
@@ -59,9 +76,10 @@ namespace TaskManagementApi.Repositories
         {
             var user = _context.Users.FirstOrDefault(x => x.Id == id);
 
-            if(user != null)
+            if (user != null)
             {
                 _context.Users.Remove(_context.Users.Find(id)!);
+                _context.SaveChanges();
             }
             else
             {
@@ -95,12 +113,16 @@ namespace TaskManagementApi.Repositories
 
             if (updateDto.Username != null)
                 user.Username = updateDto.Username;
-            
+
             if (updateDto.Email != null)
                 user.Email = updateDto.Email;
-            
+
             if (updateDto.Password != null)
-                user.PasswordHash = HashPassword(updateDto.Password);
+            {
+                var salt = GenerateSalt();
+                user.PasswordHash = HashPassword(updateDto.Password, salt);
+                user.PasswordSalt = salt;
+            }
 
             _context.Users.Update(user);
             _context.SaveChanges();
@@ -110,13 +132,11 @@ namespace TaskManagementApi.Repositories
 
         public UserResponseDto? ValidateCredentials(string username, string password)
         {
-            var hashedPassword = HashPassword(password);
+            var user = _context.Users.FirstOrDefault(u => u.Username == username);
+            if (user == null) return null;
 
-            var user = _context.Users.FirstOrDefault(u => 
-                u.Username == username && 
-                u.PasswordHash == hashedPassword);
-
-            if(user == null) return null;
+            var hashedPassword = HashPassword(password, user.PasswordSalt);
+            if (user.PasswordHash != hashedPassword) return null;
 
             return ToDto(user);
         }

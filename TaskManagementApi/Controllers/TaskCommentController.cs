@@ -26,6 +26,11 @@ namespace TaskManagementApi.Controllers
         [HttpPost(Name = "AddCommentToTask")]
         public ActionResult<TaskComment> AddCommentToTask(TaskComment taskComment)
         {
+            if(taskComment == null)
+            {
+                return BadRequest("TaskComment cannot be null!");
+            }
+
             _taskCommentRepository.Add(taskComment);
             return CreatedAtAction("GetTaskCommentById", new { id = taskComment.Id }, taskComment);
         }
@@ -33,6 +38,12 @@ namespace TaskManagementApi.Controllers
         [HttpDelete("{id}", Name = "DeleteTaskComment")]
         public ActionResult DeleteTaskComment(int id)
         {
+            var taskComment = _taskCommentRepository.GetById(id);
+            if (taskComment == null)
+            {
+                return NotFound("TaskComment not found.");
+            }
+
             _taskCommentRepository.Delete(id);
             return NoContent();
         }

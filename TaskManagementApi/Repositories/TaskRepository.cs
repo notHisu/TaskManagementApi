@@ -54,7 +54,7 @@ namespace TaskManagementApi.Repositories
             return _context.TaskItems.ToList();
         }
 
-        public TaskItem? GetById(int id)
+        public TaskItem? GetById(int id, int? secondId = null)
         {
             var task = _context.TaskItems.FirstOrDefault(t => t.Id == id);
             if (task == null)

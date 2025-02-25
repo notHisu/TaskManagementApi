@@ -37,7 +37,7 @@ namespace TaskManagementApi.Repositories
             return _context.TaskComments.ToList();
         }
 
-        public TaskComment? GetById(int id)
+        public TaskComment? GetById(int id, int? secondId = null)
         {
             var taskComment = _context.TaskComments.FirstOrDefault(x => x.Id == id);
             

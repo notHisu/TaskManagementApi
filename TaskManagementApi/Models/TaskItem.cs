@@ -13,7 +13,7 @@ namespace TaskManagementApi.Models
         public bool IsCompleted { get; set; }
         public int UserId { get; set; }
         public int CategoryId { get; set; }
-        public DateTime CreatedAt { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         [JsonIgnore]
         public User? User { get; set; }

@@ -35,8 +35,8 @@ namespace TaskManagementApi.Models
 
             // Seed data
             modelBuilder.Entity<User>().HasData(
-                new User { Id = 1, Username = "john_doe", Email = "john@example.com", PasswordHash = "hashed_password" },
-                new User { Id = 2, Username = "jane_doe", Email = "jane@example.com", PasswordHash = "hashed_password" }
+                new User { Id = 1, Username = "john_doe", Email = "john@example.com", PasswordHash = "hashed_password", PasswordSalt = "salt" },
+                new User { Id = 2, Username = "jane_doe", Email = "jane@example.com", PasswordHash = "hashed_password", PasswordSalt = "salt" }
             );
 
             modelBuilder.Entity<Category>().HasData(

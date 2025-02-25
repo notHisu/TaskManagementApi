@@ -11,7 +11,7 @@ namespace TaskManagementApi.Models
 
         [Required]
         public required string Content { get; set; }
-        public DateTime CreatedAt { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         [JsonIgnore]
         public User? User { get; set; }
