@@ -1,5 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Diagnostics.Eventing.Reader;
+using System.Threading.Tasks;
 using TaskManagementApi.Interfaces;
 using TaskManagementApi.Models;
 using TaskManagementApi.Repositories;
@@ -10,76 +14,141 @@ namespace TaskManagementApi.Controllers
     [ApiController]
     public class UserController : ControllerBase
     {
-        private readonly IUserRepository<UserResponseDto> _userRepository;
+        private readonly UserManager<User> _userManager;
         private readonly IAuthenticationService _authService;
+        private readonly SignInManager<User> _signInManager;
 
-        public UserController(IUserRepository<UserResponseDto> userRepository, IAuthenticationService authService)
+        public UserController(UserManager<User> userManager, IAuthenticationService authService, SignInManager<User> signInManager)
         {
-            _userRepository = userRepository;
             _authService = authService;
+            _userManager = userManager;
+            _signInManager = signInManager;
         }
 
         [HttpPost("register")]
-        public ActionResult<AuthResponseDto> Register([FromBody] UserCreateDto createDto)
+        public async Task<ActionResult<AuthResponseDto>> Register([FromBody] UserCreateDto createDto)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            try
+            var user = new User
             {
-                var createdUser = _userRepository.Add(createDto);
-                var token = _authService.GenerateToken(createdUser);
+                UserName = createDto.Username,
+                Email = createDto.Email
+            };
 
+            var createdUser = await _userManager.CreateAsync(user, createDto.Password);
+
+            if (createdUser == null)
+            {
+                return BadRequest("User could not be created");
+            }
+
+            if (createdUser.Succeeded)
+            {
                 return Ok(new AuthResponseDto
                 {
-                    User = createdUser,
-                    Token = token
+                    User = new UserResponseDto
+                    {
+                        Id = user.Id,
+                        Username = user.UserName,
+                        Email = user.Email
+                    },
+                    Token = _authService.GenerateToken(user)
                 });
             }
-            catch (Exception ex) when (ex.Message.Contains("duplicate"))
+            else
             {
-                return Conflict("Username already exists");
+                return StatusCode(500, createdUser.Errors);
             }
         }
 
+
         [HttpPost("login")]
-        public ActionResult<AuthResponseDto> Login([FromBody] UserLoginDto loginDto)
+        public async Task<ActionResult<AuthResponseDto>> Login([FromBody] UserLoginDto loginDto)
         {
-            if (!ModelState.IsValid)
+            try
             {
-                return BadRequest(ModelState);
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                var user = await _userManager.Users.FirstOrDefaultAsync(x => x.UserName == loginDto.Username.ToLower());
+
+                if (user == null)
+                {
+                    return Unauthorized("Invalid username");
+                }
+
+                var result = await _signInManager.CheckPasswordSignInAsync(user, loginDto.Password, false);
+
+                if (!result.Succeeded)
+                {
+                    return Unauthorized("Invalid password");
+                }
+
+                return Ok(new AuthResponseDto
+                {
+                    User = new UserResponseDto
+                    {
+                        Id = user.Id,
+                        Username = user.UserName,
+                        Email = user.Email
+                    },
+                    Token = _authService.GenerateToken(user)
+                });
             }
-
-            var authResult = _authService.Authenticate(loginDto.Username, loginDto.Password);
-
-            if (authResult == null)
+            catch (System.Exception ex)
             {
-                return Unauthorized("Invalid username or password");
+                return StatusCode(500, ex.Message);
             }
-
-            return Ok(authResult);
         }
 
         [Authorize]
         [HttpGet(Name = "GetAllUsers")]
-        public ActionResult<IEnumerable<UserResponseDto>> GetAllUsers()
+        public async Task<ActionResult<IEnumerable<UserResponseDto>>> GetAllUsers()
         {
-            var users = _userRepository.GetAll();
-            return Ok(users);
+            try
+            {
+                var users = await _userManager.Users.Select(x => new UserResponseDto
+                {
+                    Id = x.Id,
+                    Username = x.UserName,
+                    Email = x.Email
+                }).ToListAsync();
+                return Ok(users);
+            }
+            catch (System.Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
 
         [Authorize]
         [HttpGet("{id}", Name = "GetUserById")]
-        public ActionResult<UserResponseDto> GetUserById(int id)
+        public ActionResult<UserResponseDto> GetUserById(string id)
         {
-            var user = _userRepository.GetById(id);
-            if (user == null)
+            try
             {
-                return NotFound();
+                var user = _userManager.Users.FirstOrDefault(x => x.Id == id);
+                if (user == null)
+                {
+                    return NotFound();
+                }
+                return Ok(new UserResponseDto
+                {
+                    Id = user.Id,
+                    Username = user.UserName,
+                    Email = user.Email
+                });
             }
-            return Ok(user);
+            catch (System.Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
 
     }

@@ -7,10 +7,7 @@ namespace TaskManagementApi.Models
         public int TaskId { get; set; }
         public int LabelId { get; set; }
 
-        [JsonIgnore]
         public TaskItem? Task { get; set; }
-
-        [JsonIgnore]
         public Label? Label { get; set; }
     }
 }

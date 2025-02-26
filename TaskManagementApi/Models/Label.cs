@@ -5,8 +5,8 @@ namespace TaskManagementApi.Models
     public class Label
     {
         public int Id { get; set; }
-
-        [Required]
         public required string Name { get; set; }
+
+        public ICollection<TaskLabel>? TaskLabels { get; set; } = new List<TaskLabel>();
     }
 }

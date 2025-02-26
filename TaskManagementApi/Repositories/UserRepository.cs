@@ -14,22 +14,11 @@ namespace TaskManagementApi.Repositories
             _context = context;
         }
 
-        private static string GenerateSalt()
-        {
-            byte[] salt = new byte[16];
-            using (var rng = RandomNumberGenerator.Create())
-            {
-                rng.GetBytes(salt);
-            }
-
-            return Convert.ToBase64String(salt);
-        }
-
-        private static string HashPassword(string password, string salt)
+        private static string HashPassword(string password)
         {
             using (var sha256 = SHA256.Create())
             {
-                var saltedPassword = password + salt;
+                var saltedPassword = password;
                 byte[] hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(saltedPassword));
                 return Convert.ToBase64String(hashedBytes);
             }
@@ -45,7 +34,7 @@ namespace TaskManagementApi.Repositories
             return new UserResponseDto
             {
                 Id = user.Id,
-                Username = user.Username,
+                Username = user.UserName,
                 Email = user.Email
             };
         }
@@ -56,14 +45,11 @@ namespace TaskManagementApi.Repositories
             {
                 throw new ArgumentNullException(nameof(createDto));
             }
-
-            var salt = GenerateSalt();
             var user = new User
             {
-                Username = createDto.Username,
+                UserName = createDto.Username,
                 Email = createDto.Email,
-                PasswordHash = HashPassword(createDto.Password, salt),
-                PasswordSalt = salt
+                PasswordHash = HashPassword(createDto.Password),
             };
 
             _context.Users.Add(user);
@@ -72,7 +58,7 @@ namespace TaskManagementApi.Repositories
             return ToDto(user);
         }
 
-        public void Delete(int id)
+        public void Delete(string id)
         {
             var user = _context.Users.FirstOrDefault(x => x.Id == id);
 
@@ -92,7 +78,7 @@ namespace TaskManagementApi.Repositories
             return _context.Users.Select(user => ToDto(user)).ToList();
         }
 
-        public UserResponseDto? GetById(int id)
+        public UserResponseDto? GetById(string id)
         {
             var user = _context.Users.FirstOrDefault(x => x.Id == id);
 
@@ -106,37 +92,24 @@ namespace TaskManagementApi.Repositories
             }
         }
 
-        public UserResponseDto? Update(int id, UserUpdateDto updateDto)
+        public UserResponseDto? Update(string id, UserUpdateDto updateDto)
         {
             var user = _context.Users.FirstOrDefault(x => x.Id == id);
             if (user == null) return null;
 
             if (updateDto.Username != null)
-                user.Username = updateDto.Username;
+                user.UserName = updateDto.Username;
 
             if (updateDto.Email != null)
                 user.Email = updateDto.Email;
 
             if (updateDto.Password != null)
             {
-                var salt = GenerateSalt();
-                user.PasswordHash = HashPassword(updateDto.Password, salt);
-                user.PasswordSalt = salt;
+                user.PasswordHash = HashPassword(updateDto.Password);
             }
 
             _context.Users.Update(user);
             _context.SaveChanges();
-
-            return ToDto(user);
-        }
-
-        public UserResponseDto? ValidateCredentials(string username, string password)
-        {
-            var user = _context.Users.FirstOrDefault(u => u.Username == username);
-            if (user == null) return null;
-
-            var hashedPassword = HashPassword(password, user.PasswordSalt);
-            if (user.PasswordHash != hashedPassword) return null;
 
             return ToDto(user);
         }

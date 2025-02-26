@@ -8,7 +8,7 @@ namespace TaskManagementApi.Models
         public string Title { get; set; } = string.Empty;
         public string? Description { get; set; }
         public bool IsCompleted { get; set; }
-        public int UserId { get; set; }
+        public string? UserId { get; set; }
         public int CategoryId { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
@@ -27,7 +27,7 @@ namespace TaskManagementApi.Models
         public int CategoryId { get; set; }
 
         [Required]
-        public int UserId { get; set; }
+        public string? UserId { get; set; }
     }
 
     public class TaskUpdateDto

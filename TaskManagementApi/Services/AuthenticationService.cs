@@ -9,31 +9,15 @@ namespace TaskManagementApi.Services
 {
     public class AuthenticationService : IAuthenticationService
     {
-        private readonly IUserRepository<UserResponseDto> _userRepository;
         private readonly IConfiguration _configuration;
 
         public AuthenticationService(
-            IUserRepository<UserResponseDto> userRepository,
             IConfiguration configuration)
         {
-            _userRepository = userRepository;
             _configuration = configuration;
         }
 
-        public AuthResponseDto? Authenticate(string username, string password)
-        {
-            var user = _userRepository.ValidateCredentials(username, password);
-            if (user == null) return null;
-
-            var token = GenerateToken(user);
-            return new AuthResponseDto
-            {
-                User = user,
-                Token = token
-            };
-        }
-
-        public string GenerateToken(UserResponseDto user)
+        public string GenerateToken(User user)
         {
             var secret = _configuration["Jwt:Secret"];
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret ?? throw new InvalidOperationException("JWT Secret not configured")));
@@ -41,8 +25,8 @@ namespace TaskManagementApi.Services
 
             var claims = new[]
             {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Name, user.Username)
+                new Claim(ClaimTypes.NameIdentifier, user.Id!),
+                new Claim(ClaimTypes.Name, user.UserName)
             };
 
             var token = new JwtSecurityToken(

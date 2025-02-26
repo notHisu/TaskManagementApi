@@ -7,16 +7,12 @@ namespace TaskManagementApi.Models
     {
         public int Id { get; set; }
         public int TaskId { get; set; }
-        public int UserId { get; set; }
-
-        [Required]
+        public string? UserId { get; set; }
         public required string Content { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        [JsonIgnore]
         public User? User { get; set; }
 
-        [JsonIgnore]
         public TaskItem? Task { get; set; }
     }
 }

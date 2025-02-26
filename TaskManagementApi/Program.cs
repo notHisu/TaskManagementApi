@@ -8,29 +8,31 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using TaskManagementApi.DTOs;
+using Microsoft.AspNetCore.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-//builder.Services.AddSingleton<ITaskService, TaskService>();
-
 builder.Services.AddTransient<ITaskRepository<TaskResponseDto>, TaskRepository>();
 builder.Services.AddTransient<ITaskLabelRepository<TaskLabelResponseDto>, TaskLabelRepository>();
 builder.Services.AddTransient<ITaskCommentRepository<TaskCommentResponseDto>, TaskCommentRepository>();
 builder.Services.AddTransient<ICategoryRepository<CategoryResponseDto>, CategoryRepository>();
-builder.Services.AddTransient<IUserRepository<UserResponseDto>, UserRepository>();
 
 builder.Services.AddDbContext<TaskContext>(options =>
-
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
+
+builder.Services.AddIdentity<User, IdentityRole>()
+    .AddEntityFrameworkStores<TaskContext>()
+    .AddDefaultTokenProviders();
 
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
+        options.SaveToken = true;
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = false,
@@ -60,6 +62,7 @@ app.UseHttpsRedirection();
 
 app.UseMiddleware<RequestLoggingMiddleware>();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
