@@ -1,9 +1,10 @@
-﻿using TaskManagementApi.Interfaces;
+﻿using TaskManagementApi.DTOs;
+using TaskManagementApi.Interfaces;
 using TaskManagementApi.Models;
 
 namespace TaskManagementApi.Repositories
 {
-    public class TaskCommentRepository : IGenericRepository<TaskComment>
+    public class TaskCommentRepository : ITaskCommentRepository<TaskCommentResponseDto>
     {
         private readonly TaskContext _context;
 
@@ -11,18 +12,46 @@ namespace TaskManagementApi.Repositories
         {
             _context = context;
         }
-        public void Add(TaskComment entity)
+
+        private static TaskCommentResponseDto ToDto(TaskComment taskComment)
+        {
+            if (taskComment == null)
+            {
+                throw new ArgumentNullException(nameof(taskComment));
+            }
+            return new TaskCommentResponseDto
+            {
+                TaskId = taskComment.TaskId,
+                UserId = taskComment.UserId,
+                Content = taskComment.Content,
+                CreatedAt = taskComment.CreatedAt
+            };
+        }
+
+        private static IEnumerable<TaskCommentResponseDto> ToDtos(IEnumerable<TaskComment> taskComments)
+        {
+            return taskComments.Select(ToDto).ToList();
+        }
+
+        public void Add(TaskCommentCreateDto entity)
         {
             if(entity == null)
             {
                 throw new ArgumentNullException("TaskComment cannot be null");
             }
 
-            _context.TaskComments.Add(entity);
+            var taskComment = new TaskComment
+            {
+                TaskId = entity.TaskId,
+                UserId = entity.UserId,
+                Content = entity.Content
+            };
+
+            _context.TaskComments.Add(taskComment);
             _context.SaveChanges();
         }
 
-        public void Delete(int id, int? secondId = null)
+        public void Delete(int id)
         {
             var taskComment = _context.TaskComments.FirstOrDefault(c => c.Id == id);
 
@@ -32,30 +61,37 @@ namespace TaskManagementApi.Repositories
             }
         }
 
-        public IEnumerable<TaskComment> GetAll()
+        public IEnumerable<TaskCommentResponseDto> GetAll()
         {
-            return _context.TaskComments.ToList();
+            var taskComments = _context.TaskComments.ToList();
+            return ToDtos(taskComments);
         }
 
-        public TaskComment? GetById(int id, int? secondId = null)
+        public TaskCommentResponseDto? GetById(int id)
         {
-            var taskComment = _context.TaskComments.FirstOrDefault(x => x.Id == id);
-            
-            if(taskComment == null) {
-                throw new InvalidOperationException("TaskComment not found");
-            }
-            
-            return taskComment;
+            var taskComment = _context.TaskComments.FirstOrDefault(c => c.Id == id);
+            return taskComment != null ? ToDto(taskComment) : null;
         }
 
-        public void Update(TaskComment entity)
+        public void Update(int id, TaskCommentUpdateDto entity)
         {
             if(entity == null)
             {
                 throw new ArgumentNullException("TaskComment cannot be null");
             }
 
-            _context.TaskComments.Update(entity);
+            var taskComment = _context.TaskComments.FirstOrDefault(c => c.Id == id);
+
+            if(taskComment != null) {
+               throw new InvalidOperationException("TaskComment not found");
+            }
+
+            if(entity.Content != null)
+            {
+                taskComment!.Content = entity.Content;
+            }
+
+            _context.TaskComments.Update(taskComment!);
             _context.SaveChanges();
         }
     }

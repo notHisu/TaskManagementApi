@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace TaskManagementApi.Repositories
 {
-    public class TaskRepository : IGenericRepository<TaskItem>
+    public class TaskRepository : ITaskRepository<TaskResponseDto>
     {
         private readonly TaskContext _context;
 
@@ -13,7 +13,31 @@ namespace TaskManagementApi.Repositories
             _context = context;
         }
 
-        public void Add(TaskItem entity)
+        public TaskResponseDto MapToResponseDto(TaskItem task)
+        {
+            if (task == null)
+            {
+                throw new ArgumentNullException(nameof(task));
+            }
+
+            return new TaskResponseDto
+            {
+                Id = task.Id,
+                Title = task.Title,
+                Description = task.Description,
+                IsCompleted = task.IsCompleted,
+                UserId = task.UserId,
+                CategoryId = task.CategoryId,
+                CreatedAt = task.CreatedAt
+            };
+        }
+
+        public List<TaskResponseDto> MapToResponseDtos(IEnumerable<TaskItem> tasks)
+        {
+            return tasks.Select(MapToResponseDto).ToList();
+        }
+
+        public void Add(TaskCreateDto entity)
         {
             if (entity == null)
             {
@@ -33,11 +57,79 @@ namespace TaskManagementApi.Repositories
                 throw new InvalidOperationException("Category not found");
             }
 
-            _context.TaskItems.Add(entity);
+            var newTask = new TaskItem
+            {
+                Title = entity.Title,
+                Description = entity.Description,
+                IsCompleted = entity.IsCompleted,
+                UserId = entity.UserId,
+                CategoryId = entity.CategoryId,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.TaskItems.Add(newTask);
             _context.SaveChanges();
         }
 
-        public void Delete(int id, int? secondId = null)
+        public IEnumerable<TaskResponseDto> GetAll()
+        {
+            var tasks = _context.TaskItems
+                .Include(t => t.User)
+                .Include(t => t.Category)
+                .ToList();
+            return MapToResponseDtos(tasks);
+        }
+
+        public TaskResponseDto? GetById(int id)
+        {
+            var task = _context.TaskItems
+                .Include(t => t.User)
+                .Include(t => t.Category)
+                .FirstOrDefault(t => t.Id == id);
+
+            if (task == null)
+            {
+                throw new KeyNotFoundException("Task not found");
+            }
+
+            return MapToResponseDto(task);
+        }
+
+        public void Update(int id, TaskUpdateDto entity)
+        {
+            var task = _context.TaskItems.Find(id);
+
+            if (task == null)
+            {
+                throw new KeyNotFoundException("Task not found");
+            }
+
+            if (entity == null)
+            {
+                throw new ArgumentNullException(nameof(entity), "Task cannot be null");
+            }
+
+            if (entity.Title != null)
+            {
+                task.Title = entity.Title;
+            }
+            if (entity.Description != null) {
+                task.Description = entity.Description;
+            }
+            if (entity.IsCompleted != null)
+            {
+                task.IsCompleted = entity.IsCompleted.Value;
+            }
+            if (entity.CategoryId != null)
+            {
+                task.CategoryId = entity.CategoryId.Value;
+            }
+
+            _context.TaskItems.Update(task);
+            _context.SaveChanges();
+        }
+
+        public void Delete(int id)
         {
             var task = _context.TaskItems.Find(id);
             if (task == null)
@@ -46,33 +138,6 @@ namespace TaskManagementApi.Repositories
             }
 
             _context.TaskItems.Remove(task);
-            _context.SaveChanges();
-        }
-
-        public IEnumerable<TaskItem> GetAll()
-        {
-            return _context.TaskItems.ToList();
-        }
-
-        public TaskItem? GetById(int id, int? secondId = null)
-        {
-            var task = _context.TaskItems.FirstOrDefault(t => t.Id == id);
-            if (task == null)
-            {
-                throw new KeyNotFoundException("Task not found");
-            }
-
-            return task;
-        }
-
-        public void Update(TaskItem entity)
-        {
-            if (entity == null)
-            {
-                throw new ArgumentNullException(nameof(entity), "Task cannot be null");
-            }
-
-            _context.Entry(entity).State = EntityState.Modified;
             _context.SaveChanges();
         }
     }

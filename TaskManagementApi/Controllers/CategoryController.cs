@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using TaskManagementApi.DTOs;
 using TaskManagementApi.Interfaces;
 using TaskManagementApi.Models;
 
@@ -9,9 +10,9 @@ namespace TaskManagementApi.Controllers
     [ApiController]
     public class CategoryController : ControllerBase
     {
-        private readonly IGenericRepository<Category> _categoryRepository;
+        private readonly ICategoryRepository<CategoryResponseDto> _categoryRepository;
 
-        public CategoryController(IGenericRepository<Category> categoryRepository)
+        public CategoryController(ICategoryRepository<CategoryResponseDto> categoryRepository)
         {
             _categoryRepository = categoryRepository;
         }
@@ -19,25 +20,47 @@ namespace TaskManagementApi.Controllers
         [HttpGet(Name = "GetAllCategories")]
         public ActionResult GetAllCategories()
         {
-            var categories = _categoryRepository.GetAll();
-            return Ok(categories);
+            try
+            {
+                var categories = _categoryRepository.GetAll();
+                return Ok(categories);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         [HttpGet("{id}", Name = "GetCategoryById")]
-        public ActionResult GetCategoryById(int id) {
-            var category = _categoryRepository.GetById(id);
-            if (category == null)
+        public ActionResult GetCategoryById(int id) 
+        {
+            try
+            {
+                var category = _categoryRepository.GetById(id);
+                if (category == null)
+                {
+                    return NotFound();
+                }
+                return Ok(category);
+            }
+            catch (KeyNotFoundException)
             {
                 return NotFound();
             }
-            return Ok(category);
         }
 
         [HttpPost(Name = "AddCategory")]
-        public ActionResult<Category> AddCategory(Category category)
+        public ActionResult<CategoryResponseDto> AddCategory(CategoryCreateDto category)
         {
-            _categoryRepository.Add(category);
-            return CreatedAtAction("GetCategoryById", new { id = category.Id }, category);
+            try
+            {
+                _categoryRepository.Add(category);
+                return CreatedAtRoute("GetAllCategories", new { }, category);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
     }
 }

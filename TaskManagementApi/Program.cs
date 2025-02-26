@@ -7,16 +7,17 @@ using TaskManagementApi.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using TaskManagementApi.DTOs;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 //builder.Services.AddSingleton<ITaskService, TaskService>();
 
-builder.Services.AddTransient<IGenericRepository<TaskItem>, TaskRepository>();
-builder.Services.AddTransient<IGenericRepository<TaskLabel>, TaskLabelRepository>();
-builder.Services.AddTransient<IGenericRepository<TaskComment>, TaskCommentRepository>();
-builder.Services.AddTransient<IGenericRepository<Category>, CategoryRepository>();
+builder.Services.AddTransient<ITaskRepository<TaskResponseDto>, TaskRepository>();
+builder.Services.AddTransient<ITaskLabelRepository<TaskLabelResponseDto>, TaskLabelRepository>();
+builder.Services.AddTransient<ITaskCommentRepository<TaskCommentResponseDto>, TaskCommentRepository>();
+builder.Services.AddTransient<ICategoryRepository<CategoryResponseDto>, CategoryRepository>();
 builder.Services.AddTransient<IUserRepository<UserResponseDto>, UserRepository>();
 
 builder.Services.AddDbContext<TaskContext>(options =>

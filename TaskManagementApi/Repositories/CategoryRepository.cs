@@ -1,9 +1,10 @@
-﻿using TaskManagementApi.Interfaces;
+﻿using TaskManagementApi.DTOs;
+using TaskManagementApi.Interfaces;
 using TaskManagementApi.Models;
 
 namespace TaskManagementApi.Repositories
 {
-    public class CategoryRepository : IGenericRepository<Category>
+    public class CategoryRepository : ICategoryRepository<CategoryResponseDto>
     {
         private readonly TaskContext _context;
 
@@ -12,18 +13,42 @@ namespace TaskManagementApi.Repositories
             _context = context;
         }
 
-        public void Add(Category entity)
+        private static CategoryResponseDto ToDto(Category category)
+        {
+            if (category == null)
+            {
+                throw new ArgumentNullException(nameof(category));
+            }
+            return new CategoryResponseDto
+            {
+                Name = category.Name,
+                Description = category.Description
+            };
+        }
+
+        private static IEnumerable<CategoryResponseDto> ToDtos(IEnumerable<Category> categories)
+        {
+            return categories.Select(ToDto).ToList();
+        }   
+
+        public void Add(CategoryCreateDto entity)
         {
             if(entity == null)
             {
                 throw new ArgumentNullException("Category cannot be null");
             }
 
-            _context.Categories.Add(entity);
+            var category = new Category
+            {
+                Name = entity.Name,
+                Description = entity.Description
+            };
+
+            _context.Categories.Add(category);
             _context.SaveChanges();
         }
 
-        public void Delete(int id, int? secondId = null)
+        public void Delete(int id)
         {
             var category = _context.Categories.FirstOrDefault(c => c.Id == id);
 
@@ -34,29 +59,43 @@ namespace TaskManagementApi.Repositories
             }
         }
 
-        public IEnumerable<Category> GetAll()
+        public IEnumerable<CategoryResponseDto> GetAll()
         {
-            return _context.Categories.ToList();
+            var categories = _context.Categories.ToList();
+            return ToDtos(categories);
         }
 
-        public Category? GetById(int id, int? secondId = null)
+        public CategoryResponseDto? GetById(int id)
         {
             var category = _context.Categories.FirstOrDefault(c => c.Id == id);
             if (category == null)
             {
                 throw new InvalidOperationException("Category not found.");
             }
-            return category;
+            return ToDto(category);
         }
 
-        public void Update(Category entity)
+        public void Update(int id, CategoryUpdateDto entity)
         {
             if(entity == null)
             {
                 throw new ArgumentNullException("Category cannot be null");
             }
 
-            _context.Categories.Update(entity);
+            var category = _context.Categories.FirstOrDefault(c => c.Id == id);
+
+            if (category == null)
+            {
+                throw new InvalidOperationException("Category not found");
+            }
+
+            if(entity.Name != null)
+            {
+                category.Name = entity.Name;
+                category.Description = entity.Description;
+            }
+
+            _context.Categories.Update(category);
             _context.SaveChanges();
         }
     }

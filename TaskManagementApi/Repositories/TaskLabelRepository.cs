@@ -1,10 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using TaskManagementApi.DTOs;
 using TaskManagementApi.Interfaces;
 using TaskManagementApi.Models;
 
 namespace TaskManagementApi.Repositories
 {
-    public class TaskLabelRepository : IGenericRepository<TaskLabel>
+    public class TaskLabelRepository : ITaskLabelRepository<TaskLabelResponseDto>
     {
         private readonly TaskContext _context;
 
@@ -13,7 +14,25 @@ namespace TaskManagementApi.Repositories
             _context = context;
         }
 
-        public void Add(TaskLabel entity)
+        private static TaskLabelResponseDto ToDto(TaskLabel taskLabel)
+        {
+            if (taskLabel == null)
+            {
+                throw new ArgumentNullException(nameof(taskLabel));
+            }
+            return new TaskLabelResponseDto
+            {
+                TaskId = taskLabel.TaskId,
+                LabelId = taskLabel.LabelId
+            };
+        }
+
+        private static IEnumerable<TaskLabelResponseDto> ToDtos(IEnumerable<TaskLabel> taskLabels)
+        {
+            return taskLabels.Select(ToDto).ToList();
+        }
+
+        public void Add(TaskLabelCreateDto entity)
         {
             if (entity == null)
             {
@@ -39,11 +58,17 @@ namespace TaskManagementApi.Repositories
                 throw new InvalidOperationException("This task label pair already exists");
             }
 
-            _context.TaskLabels.Add(entity);
+            var newTaskLabel = new TaskLabel
+            {
+                TaskId = entity.TaskId,
+                LabelId = entity.LabelId
+            };
+
+            _context.TaskLabels.Add(newTaskLabel);
             _context.SaveChanges();
         }
 
-        public void Delete(int taskId, int? labelId = null)
+        public void Delete(int taskId, int labelId)
         {
             var taskLabel = _context.TaskLabels.Find(taskId, labelId);
             if (taskLabel == null)
@@ -55,29 +80,46 @@ namespace TaskManagementApi.Repositories
             _context.SaveChanges();
         }
 
-        public IEnumerable<TaskLabel> GetAll()
+        public IEnumerable<TaskLabelResponseDto> GetAll()
         {
-             return _context.TaskLabels.ToList();
+            var taskLabels = _context.TaskLabels.ToList();
+            return ToDtos(taskLabels);
         }
 
-        public TaskLabel? GetById(int id, int? secondId = null)
+        public TaskLabelResponseDto? GetById(int id, int secondId)
         {
             var entity = _context.TaskLabels.Find(id, secondId);
             if (entity == null) {
                 throw new InvalidOperationException("TaskLabel not found");
             }
-
-            return entity;
+            
+            return ToDto(entity);
         }
 
-        public void Update(TaskLabel entity)
+        public void Update(int taskId, int labelId, TaskLabelUpdateDto entity)
         {
             if (entity == null)
             {
                 throw new ArgumentNullException(nameof(entity), "TaskLabel cannot be null");
             }
 
-            _context.Entry(entity).State = EntityState.Modified;
+            var taskLabel = _context.TaskLabels.Find(taskId, labelId);
+            if (taskLabel == null)
+            {
+                throw new InvalidOperationException("TaskLabel not found");
+            }
+
+            if(entity.LabelId != null)
+            {
+                var labelExists = _context.Labels.Any(l => l.Id == entity.LabelId);
+                if (!labelExists)
+                {
+                    throw new InvalidOperationException("Label not found");
+                }
+
+                taskLabel.LabelId = entity.LabelId.Value;
+            }
+
             _context.SaveChanges();
         }
     }

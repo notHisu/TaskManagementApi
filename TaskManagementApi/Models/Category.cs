@@ -9,7 +9,7 @@ namespace TaskManagementApi.Models
 
         [Required]
         public required string Name { get; set; }
-        public string? Description { get; set; }
+        public string? Description { get; set; } = null;
 
 
         [JsonIgnore]

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using TaskManagementApi.DTOs;
 using TaskManagementApi.Interfaces;
 using TaskManagementApi.Models;
 
@@ -9,9 +10,9 @@ namespace TaskManagementApi.Controllers
     [ApiController]
     public class TaskCommentController : ControllerBase
     {
-        private readonly IGenericRepository<TaskComment> _taskCommentRepository;
+        private readonly ITaskCommentRepository<TaskCommentResponseDto> _taskCommentRepository;
 
-        public TaskCommentController(IGenericRepository<TaskComment> taskCommentRepository)
+        public TaskCommentController(ITaskCommentRepository<TaskCommentResponseDto> taskCommentRepository)
         {
             _taskCommentRepository = taskCommentRepository;
         }
@@ -19,33 +20,43 @@ namespace TaskManagementApi.Controllers
         [HttpGet(Name = "GetAllTaskComments")]
         public ActionResult GetAllTaskComments()
         {
-            var taskComments = _taskCommentRepository.GetAll();
-            return Ok(taskComments);
+            try
+            {
+                var taskComments = _taskCommentRepository.GetAll();
+                return Ok(taskComments);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         [HttpPost(Name = "AddCommentToTask")]
-        public ActionResult<TaskComment> AddCommentToTask(TaskComment taskComment)
+        public ActionResult<TaskCommentResponseDto> AddCommentToTask(TaskCommentCreateDto taskComment)
         {
-            if(taskComment == null)
+            try
             {
-                return BadRequest("TaskComment cannot be null!");
+                _taskCommentRepository.Add(taskComment);
+                return CreatedAtRoute("GetAllTaskComments", new { }, taskComment);
             }
-
-            _taskCommentRepository.Add(taskComment);
-            return CreatedAtAction("GetTaskCommentById", new { id = taskComment.Id }, taskComment);
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         [HttpDelete("{id}", Name = "DeleteTaskComment")]
         public ActionResult DeleteTaskComment(int id)
         {
-            var taskComment = _taskCommentRepository.GetById(id);
-            if (taskComment == null)
+            try
             {
-                return NotFound("TaskComment not found.");
+                _taskCommentRepository.Delete(id);
+                return NoContent();
             }
-
-            _taskCommentRepository.Delete(id);
-            return NoContent();
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }   
         }
 
     }

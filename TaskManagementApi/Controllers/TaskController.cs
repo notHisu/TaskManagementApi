@@ -12,61 +12,113 @@ namespace TaskManagementApi.Controllers
     {
         //private readonly ITaskService _taskRepository;
 
-        private readonly IGenericRepository<TaskItem> _taskRepository;
+        private readonly ITaskRepository<TaskResponseDto> _taskRepository;
 
-        public TaskController(IGenericRepository<TaskItem> taskRepository)
+        public TaskController(ITaskRepository<TaskResponseDto> taskRepository)
         {
             _taskRepository = taskRepository;
         }
 
-        [HttpGet(Name= "GetAllTasks")]
-        public ActionResult<List<TaskItem>> GetAllTasks()
+        [HttpGet(Name = "GetAllTasks")]
+        public ActionResult<List<TaskResponseDto>> GetAllTasks()
         {
-            var tasks = _taskRepository.GetAll();
-            return Ok(tasks);
+            try
+            {
+                var tasks = _taskRepository.GetAll();
+                return Ok(tasks);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         [HttpGet("{id}", Name = "GetTaskById")]
-        public ActionResult<TaskItem> GetTaskById(int id)
+        public ActionResult<TaskResponseDto> GetTaskById(int id)
         {
-            var task = _taskRepository.GetById(id);
-            if (task == null)
+            try
+            {
+                var task = _taskRepository.GetById(id);
+                if (task == null)
+                {
+                    return NotFound();
+                }
+                return Ok(task);
+            }
+            catch (KeyNotFoundException)
             {
                 return NotFound();
             }
-            return Ok(task);
         }
 
+
         [HttpPost(Name = "AddTask")]
-        public ActionResult<TaskItem> AddTask(TaskItem task)
+        public ActionResult<TaskResponseDto> AddTask(TaskCreateDto createDto)
         {
-            _taskRepository.Add(task);
-            return CreatedAtAction("GetTaskById", new { id = task.Id }, task);
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var task = new TaskCreateDto
+            {
+                Title = createDto.Title,
+                Description = createDto.Description,
+                IsCompleted = createDto.IsCompleted,
+                UserId = createDto.UserId,
+                CategoryId = createDto.CategoryId
+            };
+
+            try
+            {
+                _taskRepository.Add(task);
+                return Ok(task);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         [HttpPut("{id}", Name = "UpdateTask")]
-        public ActionResult<TaskItem> UpdateTask(int id, TaskItem task)
+        public ActionResult<TaskResponseDto> UpdateTask(int id, TaskUpdateDto updateDto)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             var existingTask = _taskRepository.GetById(id);
             if (existingTask == null)
             {
                 return NotFound();
             }
-            task.Id = id;
-            _taskRepository.Update(task);
-            return Ok(task);
+            try
+            {
+                _taskRepository.Update(id, updateDto);
+                return Ok(updateDto);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         [HttpDelete("{id}", Name = "DeleteTask")]
         public ActionResult DeleteTask(int id)
         {
-            var existingTask = _taskRepository.GetById(id);
-            if (existingTask == null)
+            try
+            {
+                _taskRepository.Delete(id);
+                return NoContent();
+            }
+            catch (KeyNotFoundException)
             {
                 return NotFound();
             }
-            _taskRepository.Delete(id);
-            return NoContent();
         }
+
+
     }
 }
+
