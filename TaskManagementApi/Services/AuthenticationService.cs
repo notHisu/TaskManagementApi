@@ -26,12 +26,14 @@ namespace TaskManagementApi.Services
             var claims = new[]
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id!),
-                new Claim(ClaimTypes.Name, user.UserName)
+                new Claim(ClaimTypes.Name, user.UserName!),
             };
 
             var token = new JwtSecurityToken(
+                issuer: _configuration["Jwt:Issuer"] ?? throw new InvalidOperationException("JWT Issuer not configured"),
+                audience: _configuration["Jwt:Audience"] ?? throw new InvalidOperationException("JWT Audience not configured"),
                 claims: claims,
-                expires: DateTime.Now.AddDays(1),
+                expires: DateTime.UtcNow.AddDays(1),
                 signingCredentials: credentials
             );
 

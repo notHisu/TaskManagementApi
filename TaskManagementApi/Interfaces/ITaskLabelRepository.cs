@@ -1,13 +1,11 @@
-﻿using TaskManagementApi.DTOs;
-
-namespace TaskManagementApi.Interfaces
+﻿namespace TaskManagementApi.Interfaces
 {
     public interface ITaskLabelRepository<T> where T : class
     {
-        IEnumerable<T> GetAll();
-        T? GetById(int firstId, int secondId);
-        void Add(TaskLabelCreateDto entity);
-        void Update(int taskId, int labelId, TaskLabelUpdateDto entity);
-        void Delete(int firstId, int secondId);
+        Task<IEnumerable<T>> GetAllAsync();
+        Task<T?> GetByIdAsync(int firstId, int secondId);
+        Task<T> AddAsync(T entity);
+        Task<T> UpdateAsync(int taskId, int labelId);
+        Task DeleteAsync(int firstId, int secondId);
     }
 }

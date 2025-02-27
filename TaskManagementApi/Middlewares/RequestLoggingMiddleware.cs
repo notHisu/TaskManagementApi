@@ -3,7 +3,7 @@ using System;
 using System.Threading.Tasks;
 using System.IO;
 
-namespace TaskManagementApi
+namespace TaskManagementApi.Middlewares
 {
     public class RequestLoggingMiddleware 
     {

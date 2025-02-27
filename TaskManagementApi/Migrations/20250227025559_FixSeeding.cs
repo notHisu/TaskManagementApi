@@ -3,10 +3,12 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
+#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
+
 namespace TaskManagementApi.Migrations
 {
     /// <inheritdoc />
-    public partial class UpdateEntitiesAndConstraints : Migration
+    public partial class FixSeeding : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -263,6 +265,74 @@ namespace TaskManagementApi.Migrations
                         principalTable: "TaskItems",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.InsertData(
+                table: "AspNetRoles",
+                columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
+                values: new object[,]
+                {
+                    { "1", null, "Admin", "ADMIN" },
+                    { "2", null, "User", "USER" }
+                });
+
+            migrationBuilder.InsertData(
+                table: "AspNetUsers",
+                columns: new[] { "Id", "AccessFailedCount", "ConcurrencyStamp", "Email", "EmailConfirmed", "LockoutEnabled", "LockoutEnd", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "SecurityStamp", "TwoFactorEnabled", "UserName" },
+                values: new object[] { "1", 0, "9cbf56f1-eee1-43ce-a6f8-1ec61907db51", "admin@example.com", true, false, null, "ADMIN@EXAMPLE.COM", "ADMIN", "AQAAAAIAAYagAAAAEMtpvMLVjaHbIg3xIV28a2XDxn9YeyNcZeSZQr/dMKqJhOnAV4hbzrihCnmb2CiDOA==", null, false, "STATIC-SECURITY-STAMP-ADMIN", false, "admin" });
+
+            migrationBuilder.InsertData(
+                table: "Categories",
+                columns: new[] { "Id", "Description", "Name" },
+                values: new object[,]
+                {
+                    { 1, null, "Personal" },
+                    { 2, null, "Work" },
+                    { 3, null, "Shopping" }
+                });
+
+            migrationBuilder.InsertData(
+                table: "Labels",
+                columns: new[] { "Id", "Name" },
+                values: new object[,]
+                {
+                    { 1, "Urgent" },
+                    { 2, "Important" },
+                    { 3, "Home" },
+                    { 4, "Office" }
+                });
+
+            migrationBuilder.InsertData(
+                table: "TaskItems",
+                columns: new[] { "Id", "CategoryId", "CreatedAt", "Description", "IsCompleted", "Title", "UserId" },
+                values: new object[,]
+                {
+                    { 1, 2, new DateTime(2021, 10, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Study the basics of ASP.NET Core framework and its components", false, "Learn ASP.NET Core", "1" },
+                    { 2, 2, new DateTime(2021, 10, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Set up a new ASP.NET Core project using Visual Studio or Visual Studio Code", false, "Create a new project", "1" },
+                    { 3, 2, new DateTime(2021, 10, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Implement a new feature based on project requirements", false, "Add a new feature", "1" },
+                    { 4, 2, new DateTime(2021, 10, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Deploy the application to a hosting service like Azure or AWS", false, "Deploy the app", "1" }
+                });
+
+            migrationBuilder.InsertData(
+                table: "TaskComments",
+                columns: new[] { "Id", "Content", "CreatedAt", "TaskId", "UserId" },
+                values: new object[,]
+                {
+                    { 1, "This is a great task!", new DateTime(2021, 10, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 1, "1" },
+                    { 2, "I'm making progress on this task.", new DateTime(2021, 10, 2, 0, 0, 0, 0, DateTimeKind.Unspecified), 1, "1" },
+                    { 3, "I'm excited to start this project.", new DateTime(2021, 10, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 2, "1" }
+                });
+
+            migrationBuilder.InsertData(
+                table: "TaskLabels",
+                columns: new[] { "LabelId", "TaskId" },
+                values: new object[,]
+                {
+                    { 1, 1 },
+                    { 2, 1 },
+                    { 2, 2 },
+                    { 2, 3 },
+                    { 2, 4 }
                 });
 
             migrationBuilder.CreateIndex(

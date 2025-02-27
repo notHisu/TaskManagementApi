@@ -4,10 +4,10 @@ namespace TaskManagementApi.Interfaces
 {
     public interface ITaskCommentRepository<T> where T : class
     {
-        IEnumerable<T> GetAll();
-        T? GetById(int id);
-        void Delete(int id);
-        void Add(TaskCommentCreateDto entity);
-        void Update(int id, TaskCommentUpdateDto entity);
+        Task<IEnumerable<T>> GetAllAsync();
+        Task<T?> GetByIdAsync(int id);
+        Task DeleteAsync(int id);
+        Task<T> AddAsync(T entity);
+        Task UpdateAsync(int id, T entity);
     }
 }

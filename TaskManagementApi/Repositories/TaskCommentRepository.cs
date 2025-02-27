@@ -1,10 +1,11 @@
-﻿using TaskManagementApi.DTOs;
+﻿using Microsoft.EntityFrameworkCore;
+using TaskManagementApi.DTOs;
 using TaskManagementApi.Interfaces;
 using TaskManagementApi.Models;
 
 namespace TaskManagementApi.Repositories
 {
-    public class TaskCommentRepository : ITaskCommentRepository<TaskCommentResponseDto>
+    public class TaskCommentRepository : ITaskCommentRepository<TaskComment>
     {
         private readonly TaskContext _context;
 
@@ -13,86 +14,65 @@ namespace TaskManagementApi.Repositories
             _context = context;
         }
 
-        private static TaskCommentResponseDto ToDto(TaskComment taskComment)
+        public async Task<TaskComment> AddAsync(TaskComment entity)
         {
-            if (taskComment == null)
+            if (entity == null)
             {
-                throw new ArgumentNullException(nameof(taskComment));
-            }
-            return new TaskCommentResponseDto
-            {
-                TaskId = taskComment.TaskId,
-                UserId = taskComment.UserId,
-                Content = taskComment.Content,
-                CreatedAt = taskComment.CreatedAt
-            };
-        }
-
-        private static IEnumerable<TaskCommentResponseDto> ToDtos(IEnumerable<TaskComment> taskComments)
-        {
-            return taskComments.Select(ToDto).ToList();
-        }
-
-        public void Add(TaskCommentCreateDto entity)
-        {
-            if(entity == null)
-            {
-                throw new ArgumentNullException("TaskComment cannot be null");
+                throw new ArgumentNullException(nameof(entity), "TaskComment cannot be null");
             }
 
             var taskComment = new TaskComment
             {
                 TaskId = entity.TaskId,
                 UserId = entity.UserId,
-                Content = entity.Content
+                Content = entity.Content,
+                CreatedAt = DateTime.UtcNow
             };
 
-            _context.TaskComments.Add(taskComment);
-            _context.SaveChanges();
+            await _context.TaskComments.AddAsync(taskComment);
+            await _context.SaveChangesAsync();
+
+            return taskComment;
         }
 
-        public void Delete(int id)
+        public async Task DeleteAsync(int id)
         {
-            var taskComment = _context.TaskComments.FirstOrDefault(c => c.Id == id);
+            var taskComment = await _context.TaskComments.FirstOrDefaultAsync(c => c.Id == id);
 
-            if(taskComment != null) {
-                _context.TaskComments.Remove(taskComment);
-                _context.SaveChanges();
-            }
-        }
-
-        public IEnumerable<TaskCommentResponseDto> GetAll()
-        {
-            var taskComments = _context.TaskComments.ToList();
-            return ToDtos(taskComments);
-        }
-
-        public TaskCommentResponseDto? GetById(int id)
-        {
-            var taskComment = _context.TaskComments.FirstOrDefault(c => c.Id == id);
-            return taskComment != null ? ToDto(taskComment) : null;
-        }
-
-        public void Update(int id, TaskCommentUpdateDto entity)
-        {
-            if(entity == null)
+            if (taskComment == null)
             {
-                throw new ArgumentNullException("TaskComment cannot be null");
+                throw new KeyNotFoundException("TaskComment not found");
             }
 
-            var taskComment = _context.TaskComments.FirstOrDefault(c => c.Id == id);
+            _context.TaskComments.Remove(taskComment);
+            await _context.SaveChangesAsync();
+        }
 
-            if(taskComment != null) {
-               throw new InvalidOperationException("TaskComment not found");
-            }
+        public async Task<IEnumerable<TaskComment>> GetAllAsync()
+        {
+            return await _context.TaskComments.ToListAsync();
+        }
 
-            if(entity.Content != null)
+        public async Task<TaskComment?> GetByIdAsync(int id)
+        {
+            return await _context.TaskComments.FirstOrDefaultAsync(c => c.Id == id);
+        }
+
+        public async Task UpdateAsync(int id, TaskComment entity)
+        {
+            if (entity == null)
             {
-                taskComment!.Content = entity.Content;
+                throw new ArgumentNullException(nameof(entity), "TaskComment cannot be null");
             }
 
-            _context.TaskComments.Update(taskComment!);
-            _context.SaveChanges();
+            var taskComment = await _context.TaskComments.FirstOrDefaultAsync(c => c.Id == id);
+
+            if (taskComment == null)
+            {
+                throw new KeyNotFoundException("TaskComment not found");
+            }
+            _context.TaskComments.Entry(taskComment).CurrentValues.SetValues(entity);
+            await _context.SaveChangesAsync();
         }
     }
 }

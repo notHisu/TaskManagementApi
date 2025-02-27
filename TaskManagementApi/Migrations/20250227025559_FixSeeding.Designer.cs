@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace TaskManagementApi.Migrations
 {
     [DbContext(typeof(TaskContext))]
-    partial class TaskContextModelSnapshot : ModelSnapshot
+    [Migration("20250227025559_FixSeeding")]
+    partial class FixSeeding
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -277,6 +280,32 @@ namespace TaskManagementApi.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("TaskComments");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Content = "This is a great task!",
+                            CreatedAt = new DateTime(2021, 10, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            TaskId = 1,
+                            UserId = "1"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Content = "I'm making progress on this task.",
+                            CreatedAt = new DateTime(2021, 10, 2, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            TaskId = 1,
+                            UserId = "1"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Content = "I'm excited to start this project.",
+                            CreatedAt = new DateTime(2021, 10, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            TaskId = 2,
+                            UserId = "1"
+                        });
                 });
 
             modelBuilder.Entity("TaskManagementApi.Models.TaskItem", b =>
@@ -315,6 +344,48 @@ namespace TaskManagementApi.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("TaskItems");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CategoryId = 2,
+                            CreatedAt = new DateTime(2021, 10, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Study the basics of ASP.NET Core framework and its components",
+                            IsCompleted = false,
+                            Title = "Learn ASP.NET Core",
+                            UserId = "1"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            CategoryId = 2,
+                            CreatedAt = new DateTime(2021, 10, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Set up a new ASP.NET Core project using Visual Studio or Visual Studio Code",
+                            IsCompleted = false,
+                            Title = "Create a new project",
+                            UserId = "1"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            CategoryId = 2,
+                            CreatedAt = new DateTime(2021, 10, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Implement a new feature based on project requirements",
+                            IsCompleted = false,
+                            Title = "Add a new feature",
+                            UserId = "1"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            CategoryId = 2,
+                            CreatedAt = new DateTime(2021, 10, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Deploy the application to a hosting service like Azure or AWS",
+                            IsCompleted = false,
+                            Title = "Deploy the app",
+                            UserId = "1"
+                        });
                 });
 
             modelBuilder.Entity("TaskManagementApi.Models.TaskLabel", b =>
@@ -330,6 +401,33 @@ namespace TaskManagementApi.Migrations
                     b.HasIndex("LabelId");
 
                     b.ToTable("TaskLabels");
+
+                    b.HasData(
+                        new
+                        {
+                            TaskId = 1,
+                            LabelId = 1
+                        },
+                        new
+                        {
+                            TaskId = 1,
+                            LabelId = 2
+                        },
+                        new
+                        {
+                            TaskId = 2,
+                            LabelId = 2
+                        },
+                        new
+                        {
+                            TaskId = 3,
+                            LabelId = 2
+                        },
+                        new
+                        {
+                            TaskId = 4,
+                            LabelId = 2
+                        });
                 });
 
             modelBuilder.Entity("TaskManagementApi.Models.User", b =>
@@ -403,6 +501,24 @@ namespace TaskManagementApi.Migrations
                         .HasFilter("[UserName] IS NOT NULL");
 
                     b.ToTable("AspNetUsers", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = "1",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "9cbf56f1-eee1-43ce-a6f8-1ec61907db51",
+                            Email = "admin@example.com",
+                            EmailConfirmed = true,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "ADMIN@EXAMPLE.COM",
+                            NormalizedUserName = "ADMIN",
+                            PasswordHash = "AQAAAAIAAYagAAAAEMtpvMLVjaHbIg3xIV28a2XDxn9YeyNcZeSZQr/dMKqJhOnAV4hbzrihCnmb2CiDOA==",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "STATIC-SECURITY-STAMP-ADMIN",
+                            TwoFactorEnabled = false,
+                            UserName = "admin"
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

@@ -1,10 +1,10 @@
-﻿using TaskManagementApi.DTOs;
+﻿using Microsoft.EntityFrameworkCore;
 using TaskManagementApi.Interfaces;
 using TaskManagementApi.Models;
 
 namespace TaskManagementApi.Repositories
 {
-    public class CategoryRepository : ICategoryRepository<CategoryResponseDto>
+    public class CategoryRepository : ICategoryRepository<Category>
     {
         private readonly TaskContext _context;
 
@@ -13,90 +13,58 @@ namespace TaskManagementApi.Repositories
             _context = context;
         }
 
-        private static CategoryResponseDto ToDto(Category category)
+        public async Task<Category> AddAsync(Category entity)
         {
-            if (category == null)
+            if (entity == null)
             {
-                throw new ArgumentNullException(nameof(category));
-            }
-            return new CategoryResponseDto
-            {
-                Name = category.Name,
-                Description = category.Description
-            };
-        }
-
-        private static IEnumerable<CategoryResponseDto> ToDtos(IEnumerable<Category> categories)
-        {
-            return categories.Select(ToDto).ToList();
-        }   
-
-        public void Add(CategoryCreateDto entity)
-        {
-            if(entity == null)
-            {
-                throw new ArgumentNullException("Category cannot be null");
+                throw new ArgumentNullException(nameof(entity), "Category cannot be null");
             }
 
-            var category = new Category
-            {
-                Name = entity.Name,
-                Description = entity.Description
-            };
+            await _context.Categories.AddAsync(entity);
+            await _context.SaveChangesAsync();
 
-            _context.Categories.Add(category);
-            _context.SaveChanges();
+            return entity;
         }
 
-        public void Delete(int id)
+        public async Task<IEnumerable<Category>> GetAllAsync()
         {
-            var category = _context.Categories.FirstOrDefault(c => c.Id == id);
+            return await _context.Categories.ToListAsync();
+        }
 
+        public async Task<Category?> GetByIdAsync(int id)
+        {
+            return await _context.Categories.FindAsync(id);
+        }
+
+        public async Task DeleteAsync(int id)
+        {
+            var category = await _context.Categories.FindAsync(id);
             if (category != null)
             {
                 _context.Categories.Remove(category);
-                _context.SaveChanges();
+                await _context.SaveChangesAsync();
+            }
+            else
+            {
+                throw new KeyNotFoundException("Category not found.");
             }
         }
 
-        public IEnumerable<CategoryResponseDto> GetAll()
+        public async Task UpdateAsync(int id, Category entity)
         {
-            var categories = _context.Categories.ToList();
-            return ToDtos(categories);
-        }
+            if (entity == null)
+            {
+                throw new ArgumentNullException(nameof(entity), "Category cannot be null");
+            }
 
-        public CategoryResponseDto? GetById(int id)
-        {
-            var category = _context.Categories.FirstOrDefault(c => c.Id == id);
+            var category = await _context.Categories.FindAsync(id);
             if (category == null)
             {
-                throw new InvalidOperationException("Category not found.");
-            }
-            return ToDto(category);
-        }
-
-        public void Update(int id, CategoryUpdateDto entity)
-        {
-            if(entity == null)
-            {
-                throw new ArgumentNullException("Category cannot be null");
+                throw new KeyNotFoundException("Category not found.");
             }
 
-            var category = _context.Categories.FirstOrDefault(c => c.Id == id);
-
-            if (category == null)
-            {
-                throw new InvalidOperationException("Category not found");
-            }
-
-            if(entity.Name != null)
-            {
-                category.Name = entity.Name;
-                category.Description = entity.Description;
-            }
-
-            _context.Categories.Update(category);
-            _context.SaveChanges();
+            _context.Entry(category).CurrentValues.SetValues(entity);
+            await _context.SaveChangesAsync();
         }
     }
 }

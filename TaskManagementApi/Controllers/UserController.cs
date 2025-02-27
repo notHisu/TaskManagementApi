@@ -1,12 +1,11 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Diagnostics.Eventing.Reader;
 using System.Threading.Tasks;
 using TaskManagementApi.Interfaces;
 using TaskManagementApi.Models;
-using TaskManagementApi.Repositories;
 
 namespace TaskManagementApi.Controllers
 {
@@ -17,12 +16,14 @@ namespace TaskManagementApi.Controllers
         private readonly UserManager<User> _userManager;
         private readonly IAuthenticationService _authService;
         private readonly SignInManager<User> _signInManager;
+        private readonly IMapper _mapper;
 
-        public UserController(UserManager<User> userManager, IAuthenticationService authService, SignInManager<User> signInManager)
+        public UserController(UserManager<User> userManager, IAuthenticationService authService, SignInManager<User> signInManager, IMapper mapper)
         {
             _authService = authService;
             _userManager = userManager;
             _signInManager = signInManager;
+            _mapper = mapper;
         }
 
         [HttpPost("register")]
@@ -33,123 +34,83 @@ namespace TaskManagementApi.Controllers
                 return BadRequest(ModelState);
             }
 
-            var user = new User
-            {
-                UserName = createDto.Username,
-                Email = createDto.Email
-            };
+            var user = _mapper.Map<User>(createDto);
 
-            var createdUser = await _userManager.CreateAsync(user, createDto.Password);
+            var result = await _userManager.CreateAsync(user, createDto.Password);
 
-            if (createdUser == null)
+            if (!result.Succeeded)
             {
-                return BadRequest("User could not be created");
+                return BadRequest(result.Errors);
             }
 
-            if (createdUser.Succeeded)
+            var roleResult = await _userManager.AddToRoleAsync(user, "User");
+            if (!roleResult.Succeeded)
             {
-                return Ok(new AuthResponseDto
-                {
-                    User = new UserResponseDto
-                    {
-                        Id = user.Id,
-                        Username = user.UserName,
-                        Email = user.Email
-                    },
-                    Token = _authService.GenerateToken(user)
-                });
+                return StatusCode(500, roleResult.Errors);
             }
-            else
+
+            return Ok(new AuthResponseDto
             {
-                return StatusCode(500, createdUser.Errors);
-            }
+                User = _mapper.Map<UserResponseDto>(user),
+                Token = _authService.GenerateToken(user)
+            });
         }
-
 
         [HttpPost("login")]
         public async Task<ActionResult<AuthResponseDto>> Login([FromBody] UserLoginDto loginDto)
         {
-            try
+            if (!ModelState.IsValid)
             {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
-
-                var user = await _userManager.Users.FirstOrDefaultAsync(x => x.UserName == loginDto.Username.ToLower());
-
-                if (user == null)
-                {
-                    return Unauthorized("Invalid username");
-                }
-
-                var result = await _signInManager.CheckPasswordSignInAsync(user, loginDto.Password, false);
-
-                if (!result.Succeeded)
-                {
-                    return Unauthorized("Invalid password");
-                }
-
-                return Ok(new AuthResponseDto
-                {
-                    User = new UserResponseDto
-                    {
-                        Id = user.Id,
-                        Username = user.UserName,
-                        Email = user.Email
-                    },
-                    Token = _authService.GenerateToken(user)
-                });
+                return BadRequest(ModelState);
             }
-            catch (System.Exception ex)
+
+            var user = await _userManager.FindByNameAsync(loginDto.Username);
+            if (user == null)
             {
-                return StatusCode(500, ex.Message);
+                return Unauthorized("Invalid credentials");
             }
+
+            var result = await _signInManager.CheckPasswordSignInAsync(user, loginDto.Password, false);
+            if (!result.Succeeded)
+            {
+                return Unauthorized("Invalid credentials");
+            }
+
+            var token = _authService.GenerateToken(user);
+
+            Response.Cookies.Append("jwt", token, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Expires = DateTime.UtcNow.AddDays(1)
+            });
+
+            return Ok(new AuthResponseDto
+            {
+                User = _mapper.Map<UserResponseDto>(user),
+                Token = token
+            });
         }
 
         [Authorize]
         [HttpGet(Name = "GetAllUsers")]
         public async Task<ActionResult<IEnumerable<UserResponseDto>>> GetAllUsers()
         {
-            try
-            {
-                var users = await _userManager.Users.Select(x => new UserResponseDto
-                {
-                    Id = x.Id,
-                    Username = x.UserName,
-                    Email = x.Email
-                }).ToListAsync();
-                return Ok(users);
-            }
-            catch (System.Exception ex)
-            {
-                return StatusCode(500, ex.Message);
-            }
+            var users = await _userManager.Users.ToListAsync();
+            return Ok(_mapper.Map<List<UserResponseDto>>(users));
         }
 
         [Authorize]
         [HttpGet("{id}", Name = "GetUserById")]
-        public ActionResult<UserResponseDto> GetUserById(string id)
+        public async Task<ActionResult<UserResponseDto>> GetUserById(string id)
         {
-            try
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null)
             {
-                var user = _userManager.Users.FirstOrDefault(x => x.Id == id);
-                if (user == null)
-                {
-                    return NotFound();
-                }
-                return Ok(new UserResponseDto
-                {
-                    Id = user.Id,
-                    Username = user.UserName,
-                    Email = user.Email
-                });
+                return NotFound();
             }
-            catch (System.Exception ex)
-            {
-                return StatusCode(500, ex.Message);
-            }
+            return Ok(_mapper.Map<UserResponseDto>(user));
         }
-
     }
 }

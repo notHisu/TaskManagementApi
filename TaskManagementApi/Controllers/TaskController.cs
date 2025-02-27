@@ -1,8 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using TaskManagementApi.Interfaces;
 using TaskManagementApi.Models;
-
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using AutoMapper;
 
 namespace TaskManagementApi.Controllers
 {
@@ -10,22 +12,26 @@ namespace TaskManagementApi.Controllers
     [ApiController]
     public class TaskController : ControllerBase
     {
-        //private readonly ITaskService _taskRepository;
+        private readonly ITaskRepository<TaskItem> _taskRepository;
+        private readonly UserManager<User> _userManager;
+        private readonly IMapper _mapper;
 
-        private readonly ITaskRepository<TaskResponseDto> _taskRepository;
-
-        public TaskController(ITaskRepository<TaskResponseDto> taskRepository)
+        public TaskController(ITaskRepository<TaskItem> taskRepository, UserManager<User> userManager, IMapper mapper)
         {
             _taskRepository = taskRepository;
+            _userManager = userManager;
+            _mapper = mapper;
         }
 
         [HttpGet(Name = "GetAllTasks")]
-        public ActionResult<List<TaskResponseDto>> GetAllTasks()
+        [Authorize]
+        public async Task<ActionResult<List<TaskResponseDto>>> GetAllTasks()
         {
             try
             {
-                var tasks = _taskRepository.GetAll();
-                return Ok(tasks);
+                var tasks = await _taskRepository.GetAllAsync();
+                var taskResponse = _mapper.Map<List<TaskResponseDto>>(tasks);
+                return Ok(taskResponse);
             }
             catch (Exception ex)
             {
@@ -34,16 +40,19 @@ namespace TaskManagementApi.Controllers
         }
 
         [HttpGet("{id}", Name = "GetTaskById")]
-        public ActionResult<TaskResponseDto> GetTaskById(int id)
+        public async Task<ActionResult<TaskResponseDto>> GetTaskById(int id)
         {
             try
             {
-                var task = _taskRepository.GetById(id);
+                var task = await _taskRepository.GetByIdAsync(id);
                 if (task == null)
                 {
                     return NotFound();
                 }
-                return Ok(task);
+
+                var taskResponse = _mapper.Map<TaskResponseDto>(task);
+
+                return Ok(taskResponse);
             }
             catch (KeyNotFoundException)
             {
@@ -51,27 +60,33 @@ namespace TaskManagementApi.Controllers
             }
         }
 
-
         [HttpPost(Name = "AddTask")]
-        public ActionResult<TaskResponseDto> AddTask(TaskCreateDto createDto)
+        [Authorize]
+        public async Task<ActionResult<TaskItem>> AddTask(TaskCreateDto createDto)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            var task = new TaskCreateDto
-            {
-                Title = createDto.Title,
-                Description = createDto.Description,
-                IsCompleted = createDto.IsCompleted,
-                UserId = createDto.UserId,
-                CategoryId = createDto.CategoryId
-            };
-
             try
             {
-                _taskRepository.Add(task);
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (userId == null)
+                {
+                    return Unauthorized();
+                }
+
+                var user = await _userManager.FindByIdAsync(userId);
+                if (user == null)
+                {
+                    return Unauthorized("User not found");
+                }
+
+                var task = _mapper.Map<TaskItem>(createDto);
+                task.UserId = userId;
+
+                await _taskRepository.AddAsync(task);
                 return Ok(task);
             }
             catch (InvalidOperationException ex)
@@ -80,23 +95,37 @@ namespace TaskManagementApi.Controllers
             }
         }
 
+        [Authorize]
         [HttpPut("{id}", Name = "UpdateTask")]
-        public ActionResult<TaskResponseDto> UpdateTask(int id, TaskUpdateDto updateDto)
+        public async Task<ActionResult<TaskItem>> UpdateTask(int id, TaskUpdateDto updateDto)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            var existingTask = _taskRepository.GetById(id);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null)
+            {
+                return Unauthorized();
+            }
+
+            var existingTask = await _taskRepository.GetByIdAsync(id);
             if (existingTask == null)
             {
                 return NotFound();
             }
+
+            if (existingTask.UserId != userId)
+            {
+                return Forbid();
+            }
+
             try
             {
-                _taskRepository.Update(id, updateDto);
-                return Ok(updateDto);
+                var task = _mapper.Map(updateDto, existingTask);
+                await _taskRepository.UpdateAsync(id, task);
+                return Ok(task);
             }
             catch (InvalidOperationException ex)
             {
@@ -105,11 +134,24 @@ namespace TaskManagementApi.Controllers
         }
 
         [HttpDelete("{id}", Name = "DeleteTask")]
-        public ActionResult DeleteTask(int id)
+        [Authorize]
+        public async Task<ActionResult> DeleteTask(int id)
         {
             try
             {
-                _taskRepository.Delete(id);
+                var task = await _taskRepository.GetByIdAsync(id);
+                if (task == null)
+                {
+                    return NotFound();
+                }
+
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (userId == null || task.UserId != userId)
+                {
+                    return Forbid();
+                }
+
+                await _taskRepository.DeleteAsync(id);
                 return NoContent();
             }
             catch (KeyNotFoundException)
@@ -117,8 +159,5 @@ namespace TaskManagementApi.Controllers
                 return NotFound();
             }
         }
-
-
     }
 }
-

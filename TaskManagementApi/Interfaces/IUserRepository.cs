@@ -7,8 +7,8 @@ namespace TaskManagementApi.Interfaces
         IEnumerable<T> GetAll();
         T? GetById(string id);
         void Delete(string id);
-        T Add(UserCreateDto entity);
-        T? Update(string id, UserUpdateDto entity);
+        T Add(T entity);
+        T? Update(string id, T entity);
     }
 }
                                 

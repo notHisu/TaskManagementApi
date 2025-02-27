@@ -1,117 +1,74 @@
-﻿using TaskManagementApi.Interfaces;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using TaskManagementApi.Interfaces;
 using TaskManagementApi.Models;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace TaskManagementApi.Repositories
 {
-    public class UserRepository : IUserRepository<UserResponseDto>
+    public class UserRepository : IUserRepository<User>
     {
         private readonly TaskContext _context;
+        private readonly IPasswordHasher<User> _passwordHasher;
 
-        public UserRepository(TaskContext context)
+        public UserRepository(TaskContext context, IPasswordHasher<User> passwordHasher)
         {
             _context = context;
+            _passwordHasher = passwordHasher;
         }
 
-        private static string HashPassword(string password)
-        {
-            using (var sha256 = SHA256.Create())
-            {
-                var saltedPassword = password;
-                byte[] hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(saltedPassword));
-                return Convert.ToBase64String(hashedBytes);
-            }
-        }
-
-        private static UserResponseDto ToDto(User user)
+        public User Add(User user)
         {
             if (user == null)
             {
                 throw new ArgumentNullException(nameof(user));
             }
 
-            return new UserResponseDto
-            {
-                Id = user.Id,
-                Username = user.UserName,
-                Email = user.Email
-            };
-        }
-
-        public UserResponseDto Add(UserCreateDto createDto)
-        {
-            if (createDto == null)
-            {
-                throw new ArgumentNullException(nameof(createDto));
-            }
-            var user = new User
-            {
-                UserName = createDto.Username,
-                Email = createDto.Email,
-                PasswordHash = HashPassword(createDto.Password),
-            };
-
+            user.PasswordHash = _passwordHasher.HashPassword(user, user.PasswordHash!);
             _context.Users.Add(user);
             _context.SaveChanges();
 
-            return ToDto(user);
+            return user;
         }
 
         public void Delete(string id)
         {
-            var user = _context.Users.FirstOrDefault(x => x.Id == id);
+            var user = _context.Users.Find(id);
+            if (user == null)
+            {
+                throw new KeyNotFoundException("User not found");
+            }
 
-            if (user != null)
-            {
-                _context.Users.Remove(_context.Users.Find(id)!);
-                _context.SaveChanges();
-            }
-            else
-            {
-                throw new InvalidOperationException("User not found");
-            }
+            _context.Users.Remove(user);
+            _context.SaveChanges();
         }
 
-        public IEnumerable<UserResponseDto> GetAll()
+        public IEnumerable<User> GetAll()
         {
-            return _context.Users.Select(user => ToDto(user)).ToList();
+            return _context.Users.ToList();
         }
 
-        public UserResponseDto? GetById(string id)
+        public User? GetById(string id)
         {
-            var user = _context.Users.FirstOrDefault(x => x.Id == id);
-
-            if (user != null)
+            var user = _context.Users.Find(id);
+            if (user == null)
             {
-                return ToDto(user);
+                throw new KeyNotFoundException("User not found");
             }
-            else
-            {
-                throw new InvalidOperationException("User not found");
-            }
+            return user;
         }
 
-        public UserResponseDto? Update(string id, UserUpdateDto updateDto)
+        public User Update(string id, User updatedUser)
         {
-            var user = _context.Users.FirstOrDefault(x => x.Id == id);
-            if (user == null) return null;
-
-            if (updateDto.Username != null)
-                user.UserName = updateDto.Username;
-
-            if (updateDto.Email != null)
-                user.Email = updateDto.Email;
-
-            if (updateDto.Password != null)
+            var user = _context.Users.Find(id);
+            if (user == null)
             {
-                user.PasswordHash = HashPassword(updateDto.Password);
+                throw new KeyNotFoundException("User not found");
             }
 
-            _context.Users.Update(user);
+            _context.Entry(user).CurrentValues.SetValues(updatedUser);
             _context.SaveChanges();
 
-            return ToDto(user);
+            return user;
         }
     }
 }

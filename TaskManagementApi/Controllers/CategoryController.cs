@@ -1,8 +1,10 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using TaskManagementApi.DTOs;
 using TaskManagementApi.Interfaces;
 using TaskManagementApi.Models;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace TaskManagementApi.Controllers
 {
@@ -10,56 +12,69 @@ namespace TaskManagementApi.Controllers
     [ApiController]
     public class CategoryController : ControllerBase
     {
-        private readonly ICategoryRepository<CategoryResponseDto> _categoryRepository;
+        private readonly ICategoryRepository<Category> _categoryRepository;
+        private readonly IMapper _mapper;
 
-        public CategoryController(ICategoryRepository<CategoryResponseDto> categoryRepository)
+        public CategoryController(ICategoryRepository<Category> categoryRepository, IMapper mapper)
         {
             _categoryRepository = categoryRepository;
+            _mapper = mapper;
         }
 
         [HttpGet(Name = "GetAllCategories")]
-        public ActionResult GetAllCategories()
+        public async Task<IActionResult> GetAllCategories()
         {
             try
             {
-                var categories = _categoryRepository.GetAll();
-                return Ok(categories);
+                var categories = await _categoryRepository.GetAllAsync();
+                var categoriesResponse = _mapper.Map<List<CategoryResponseDto>>(categories);
+                return Ok(categoriesResponse);
             }
-            catch (Exception ex)
+            catch
             {
-                return BadRequest(new { message = ex.Message });
+                return StatusCode(500, new { message = "An error occurred while fetching categories." });
             }
         }
 
         [HttpGet("{id}", Name = "GetCategoryById")]
-        public ActionResult GetCategoryById(int id) 
+        public async Task<IActionResult> GetCategoryById(int id)
         {
             try
             {
-                var category = _categoryRepository.GetById(id);
+                var category = await _categoryRepository.GetByIdAsync(id);
                 if (category == null)
                 {
-                    return NotFound();
+                    return NotFound(new { message = "Category not found" });
                 }
-                return Ok(category);
+
+                var categoryResponse = _mapper.Map<CategoryResponseDto>(category);
+                return Ok(categoryResponse);
             }
-            catch (KeyNotFoundException)
+            catch
             {
-                return NotFound();
+                return StatusCode(500, new { message = "An error occurred while fetching the category." });
             }
         }
 
         [HttpPost(Name = "AddCategory")]
-        public ActionResult<CategoryResponseDto> AddCategory(CategoryCreateDto category)
+        public async Task<IActionResult> AddCategory([FromBody] CategoryCreateDto createDto)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
-                _categoryRepository.Add(category);
-                return CreatedAtRoute("GetAllCategories", new { }, category);
+                var category = _mapper.Map<Category>(createDto);
+                var createdCategory = await _categoryRepository.AddAsync(category);
+                var categoryResponse = _mapper.Map<CategoryResponseDto>(createdCategory);
+
+                return CreatedAtRoute("GetCategoryById", new { id = createdCategory.Id }, categoryResponse);
             }
-            catch (Exception ex)
+            catch
             {
-                return BadRequest(new { message = ex.Message });
+                return StatusCode(500, new { message = "An error occurred while creating the category." });
             }
         }
     }
