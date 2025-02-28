@@ -1,8 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using TaskManagementApi.Interfaces;
 using TaskManagementApi.Models;
-
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using AutoMapper;
 
 namespace TaskManagementApi.Controllers
 {
@@ -10,61 +12,152 @@ namespace TaskManagementApi.Controllers
     [ApiController]
     public class TaskController : ControllerBase
     {
-        private readonly ITaskService _taskService;
+        private readonly ITaskRepository<TaskItem> _taskRepository;
+        private readonly UserManager<User> _userManager;
+        private readonly IMapper _mapper;
 
-        public TaskController(ITaskService taskService)
+        public TaskController(ITaskRepository<TaskItem> taskRepository, UserManager<User> userManager, IMapper mapper)
         {
-            _taskService = taskService;
+            _taskRepository = taskRepository;
+            _userManager = userManager;
+            _mapper = mapper;
         }
 
-        [HttpGet(Name= "GetAllTasks")]
-        public ActionResult<List<TaskItem>> GetAllTasks()
+        [HttpGet(Name = "GetAllTasks")]
+        [Authorize]
+        public async Task<ActionResult<List<TaskResponseDto>>> GetAllTasks()
         {
-            var tasks = _taskService.GetAllTasks();
-            return Ok(tasks);
+            try
+            {
+                var tasks = await _taskRepository.GetAllAsync();
+                var taskResponse = _mapper.Map<List<TaskResponseDto>>(tasks);
+                return Ok(taskResponse);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         [HttpGet("{id}", Name = "GetTaskById")]
-        public ActionResult<TaskItem> GetTaskById(int id)
+        public async Task<ActionResult<TaskResponseDto>> GetTaskById(int id)
         {
-            var task = _taskService.GetTaskById(id);
-            if (task == null)
+            try
+            {
+                var task = await _taskRepository.GetByIdAsync(id);
+                if (task == null)
+                {
+                    return NotFound();
+                }
+
+                var taskResponse = _mapper.Map<TaskResponseDto>(task);
+
+                return Ok(taskResponse);
+            }
+            catch (KeyNotFoundException)
             {
                 return NotFound();
             }
-            return Ok(task);
         }
 
         [HttpPost(Name = "AddTask")]
-        public ActionResult<TaskItem> AddTask(TaskItem task)
+        [Authorize]
+        public async Task<ActionResult<TaskItem>> AddTask(TaskCreateDto createDto)
         {
-            _taskService.AddTask(task);
-            return CreatedAtAction("GetTaskById", new { id = task.Id }, task);
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (userId == null)
+                {
+                    return Unauthorized();
+                }
+
+                var user = await _userManager.FindByIdAsync(userId);
+                if (user == null)
+                {
+                    return Unauthorized("User not found");
+                }
+
+                var task = _mapper.Map<TaskItem>(createDto);
+                task.UserId = userId;
+
+                await _taskRepository.AddAsync(task);
+                return Ok(task);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
+        [Authorize]
         [HttpPut("{id}", Name = "UpdateTask")]
-        public ActionResult<TaskItem> UpdateTask(int id, TaskItem task)
+        public async Task<ActionResult<TaskItem>> UpdateTask(int id, TaskUpdateDto updateDto)
         {
-            var existingTask = _taskService.GetTaskById(id);
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null)
+            {
+                return Unauthorized();
+            }
+
+            var existingTask = await _taskRepository.GetByIdAsync(id);
             if (existingTask == null)
             {
                 return NotFound();
             }
-            task.Id = id;
-            _taskService.UpdateTask(task);
-            return Ok(task);
+
+            if (existingTask.UserId != userId)
+            {
+                return Forbid();
+            }
+
+            try
+            {
+                var task = _mapper.Map(updateDto, existingTask);
+                await _taskRepository.UpdateAsync(id, task);
+                return Ok(task);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         [HttpDelete("{id}", Name = "DeleteTask")]
-        public ActionResult DeleteTask(int id)
+        [Authorize]
+        public async Task<ActionResult> DeleteTask(int id)
         {
-            var existingTask = _taskService.GetTaskById(id);
-            if (existingTask == null)
+            try
+            {
+                var task = await _taskRepository.GetByIdAsync(id);
+                if (task == null)
+                {
+                    return NotFound();
+                }
+
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (userId == null || task.UserId != userId)
+                {
+                    return Forbid();
+                }
+
+                await _taskRepository.DeleteAsync(id);
+                return NoContent();
+            }
+            catch (KeyNotFoundException)
             {
                 return NotFound();
             }
-            _taskService.DeleteTask(id);
-            return NoContent();
         }
     }
 }
