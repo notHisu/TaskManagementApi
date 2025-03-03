@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 
-public class TaskContext : IdentityDbContext<User>
+public class TaskContext : IdentityDbContext<User, IdentityRole<int>, int>
 {
     public TaskContext(DbContextOptions<TaskContext> options) : base(options) { }
 
