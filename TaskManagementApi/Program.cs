@@ -8,7 +8,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Azure;
 using System.Text;
+using TaskManagementApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +19,9 @@ builder.Services.AddTransient<ITaskRepository<TaskItem>, TaskRepository>();
 builder.Services.AddTransient<ITaskLabelRepository<TaskLabel>, TaskLabelRepository>();
 builder.Services.AddTransient<ITaskCommentRepository<TaskComment>, TaskCommentRepository>();
 builder.Services.AddTransient<ICategoryRepository<Category>, CategoryRepository>();
+builder.Services.AddTransient<ITaskAttachmentRepository, TaskAttachmentRepository>();
+
+builder.Services.AddSingleton<IBlobStorageService, BlobStorageService>();
 
 // Configure the database
 builder.Services.AddDbContext<TaskContext>(options =>
@@ -60,6 +65,13 @@ builder.Services.AddControllers()
 // Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddAzureClients(clientBuilder =>
+{
+    var storageConfig = builder.Configuration.GetSection("StorageConnection");
+    clientBuilder.AddBlobServiceClient(builder.Configuration["blobServiceUri"]!).WithName("StorageConnection");
+    clientBuilder.AddQueueServiceClient(builder.Configuration["queueServiceUri"]!).WithName("StorageConnection");
+    clientBuilder.AddTableServiceClient(builder.Configuration["tableServiceUri"]!).WithName("StorageConnection");
+});
 
 var app = builder.Build();
 

@@ -17,5 +17,6 @@ namespace TaskManagementApi.Models
         public Category? Category { get; set; }
         public ICollection<TaskComment>? Comments { get; set; }
         public ICollection<TaskLabel>? TaskLabels { get; set; }
+        public ICollection<TaskAttachment>? Attachments { get; set; }
     }
 }
