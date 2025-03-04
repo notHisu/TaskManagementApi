@@ -8,8 +8,8 @@ namespace TaskManagementApi.Services
         private readonly BlobContainerClient _blobContainerClient;
 
         public BlobStorageService(IConfiguration configuration) {
-            var connectionString = configuration.GetConnectionString("AzureBlobStorage")!;
-            var containerName = configuration["BlobStorage:ContainerName"]!;
+            var connectionString = configuration["StorageConnection:ConnectionString"]!;
+            var containerName = configuration["StorageConnection:ContainerName"]!;
 
             _blobContainerClient = new BlobContainerClient(connectionString, containerName);
             _blobContainerClient.CreateIfNotExists();
