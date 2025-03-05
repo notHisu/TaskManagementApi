@@ -15,12 +15,14 @@ namespace TaskManagementApi.Controllers
         private readonly ITaskAttachmentRepository _taskAttachmentRepository;
         private readonly IBlobStorageService _blobStorageService;
         private readonly IMapper _mapper;
+        private readonly ITaskRepository<TaskItem> _taskRepository;
 
-        public TaskAttachmentController(ITaskAttachmentRepository taskAttachmentRepository, IBlobStorageService blobStorageService, IMapper mapper)
+        public TaskAttachmentController(ITaskAttachmentRepository taskAttachmentRepository, IBlobStorageService blobStorageService, IMapper mapper, ITaskRepository<TaskItem> taskRepository)
         {
             _taskAttachmentRepository = taskAttachmentRepository;
             _blobStorageService = blobStorageService;
             _mapper = mapper;
+            _taskRepository = taskRepository;
         }
 
         [HttpPost(Name = "Upload an attachment")]
@@ -30,7 +32,14 @@ namespace TaskManagementApi.Controllers
             {
                 return BadRequest("File is not valid");
             }
+
+            if (_taskRepository.GetByIdAsync(taskId) == null)
+            {
+                return BadRequest("Task not found");
+            }
+
             var fileName = await _blobStorageService.UploadFileAsync(file);
+
             var attachment = new TaskAttachment
             {
                 TaskId = taskId,
