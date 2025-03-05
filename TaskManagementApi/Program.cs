@@ -1,15 +1,16 @@
 using TaskManagementApi.Interfaces;
 using TaskManagementApi.Models;
-using Microsoft.EntityFrameworkCore;
-using TaskManagementApi.Repositories;
-using TaskManagementApi.Services;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
 using TaskManagementApi.DTOs;
-using Microsoft.AspNetCore.Identity;
+using TaskManagementApi.Repositories;
 using TaskManagementApi.Middlewares;
 using TaskManagementApi.Mappers;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Azure;
+using System.Text;
+using TaskManagementApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +19,9 @@ builder.Services.AddTransient<ITaskRepository<TaskItem>, TaskRepository>();
 builder.Services.AddTransient<ITaskLabelRepository<TaskLabel>, TaskLabelRepository>();
 builder.Services.AddTransient<ITaskCommentRepository<TaskComment>, TaskCommentRepository>();
 builder.Services.AddTransient<ICategoryRepository<Category>, CategoryRepository>();
+builder.Services.AddTransient<ITaskAttachmentRepository, TaskAttachmentRepository>();
+
+builder.Services.AddSingleton<IBlobStorageService, BlobStorageService>();
 
 // Configure the database
 builder.Services.AddDbContext<TaskContext>(options =>
@@ -25,57 +29,22 @@ builder.Services.AddDbContext<TaskContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
 
-// Configure auto mapper
+// Configure AutoMapper
 builder.Services.AddAutoMapper(typeof(TaskMapper).Assembly);
 builder.Services.AddAutoMapper(typeof(UserMapper).Assembly);
 builder.Services.AddAutoMapper(typeof(CategoryMapper).Assembly);
 builder.Services.AddAutoMapper(typeof(TaskLabelMapper).Assembly);
 builder.Services.AddAutoMapper(typeof(TaskCommentMapper).Assembly);
 
-// Register the Identity services
-builder.Services.AddIdentity<User, IdentityRole>()
-    .AddEntityFrameworkStores<TaskContext>()
-    .AddDefaultTokenProviders();
+// Register Identity with API endpoints
+//builder.Services.AddIdentity<User, IdentityRole>()
+//    .AddEntityFrameworkStores<TaskContext>()
+//    .AddDefaultTokenProviders();
 
-// Register authentication services
-builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
+builder.Services.AddIdentityApiEndpoints<User>()
+    .AddEntityFrameworkStores<TaskContext>();
 
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultForbidScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultSignInScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultSignOutScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-    .AddJwtBearer(options =>
-    {
-        options.SaveToken = true;
-        options.RequireHttpsMetadata = false;
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? throw new InvalidOperationException("JWT Issuer not configured"),
-            ValidAudience = builder.Configuration["Jwt:Audience"] ?? throw new InvalidOperationException("JWT Audience not configured"),
-            IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Secret"] ?? throw new InvalidOperationException("JWT Secret not configured")))
-        };
-    })
-    .AddCookie()
-    ;
-
-builder.Services.ConfigureApplicationCookie(options =>
-{
-    options.Cookie.HttpOnly = true;
-    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-    options.Cookie.SameSite = SameSiteMode.Strict;
-    options.Cookie.Name = "AuthToken";
-});
-
+// CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", builder =>
@@ -92,13 +61,21 @@ builder.Services.AddControllers()
     {
         options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
     });
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
+// Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddAzureClients(clientBuilder =>
+{
+    var storageConfig = builder.Configuration.GetSection("StorageConnection");
+    clientBuilder.AddBlobServiceClient(builder.Configuration["blobServiceUri"]!).WithName("StorageConnection");
+    clientBuilder.AddQueueServiceClient(builder.Configuration["queueServiceUri"]!).WithName("StorageConnection");
+    clientBuilder.AddTableServiceClient(builder.Configuration["tableServiceUri"]!).WithName("StorageConnection");
+});
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Configure middleware
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -106,7 +83,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 app.UseCors("AllowFrontend");
 
 app.UseMiddleware<RequestLoggingMiddleware>();
@@ -115,6 +91,8 @@ app.UseMiddleware<JwtCookieMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Map Identity API
+app.MapIdentityApi<User>();
 app.MapControllers();
 
 app.Run();

@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 
-public class TaskContext : IdentityDbContext<User>
+public class TaskContext : IdentityDbContext<User, IdentityRole<int>, int>
 {
     public TaskContext(DbContextOptions<TaskContext> options) : base(options) { }
 
@@ -14,6 +14,7 @@ public class TaskContext : IdentityDbContext<User>
     public DbSet<TaskComment> TaskComments { get; set; }
     public DbSet<Label> Labels { get; set; }
     public DbSet<TaskLabel> TaskLabels { get; set; }
+    public DbSet<TaskAttachment> TaskAttachments { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -38,6 +39,13 @@ public class TaskContext : IdentityDbContext<User>
             .HasOne(tc => tc.Task)
             .WithMany(t => t.Comments)
             .HasForeignKey(tc => tc.TaskId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // TaskItem - TaskAttachment (One-to-Many)
+        modelBuilder.Entity<TaskAttachment>()
+            .HasOne(ta => ta.Task)
+            .WithMany(t => t.Attachments)
+            .HasForeignKey(ta => ta.TaskId)
             .OnDelete(DeleteBehavior.Cascade);
 
         // User - TaskComment (One-to-Many)
@@ -83,6 +91,10 @@ public class TaskContext : IdentityDbContext<User>
 
         modelBuilder.Entity<TaskComment>()
             .Property(tc => tc.CreatedAt)
+            .HasDefaultValueSql("GETDATE()");
+
+        modelBuilder.Entity<TaskAttachment>()
+            .Property(ta => ta.UploadedAt)
             .HasDefaultValueSql("GETDATE()");
 
         // Seed data

@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace TaskManagementApi.Migrations
 {
     [DbContext(typeof(TaskContext))]
-    [Migration("20250227025730_FixModelChanges")]
-    partial class FixModelChanges
+    [Migration("20250303102404_AddAzureStorage")]
+    partial class AddAzureStorage
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -28,6 +28,42 @@ namespace TaskManagementApi.Migrations
                 {
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("NormalizedName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("IdentityRole");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = "1",
+                            Name = "Admin",
+                            NormalizedName = "ADMIN"
+                        },
+                        new
+                        {
+                            Id = "2",
+                            Name = "User",
+                            NormalizedName = "USER"
+                        });
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<int>", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
@@ -49,23 +85,9 @@ namespace TaskManagementApi.Migrations
                         .HasFilter("[NormalizedName] IS NOT NULL");
 
                     b.ToTable("AspNetRoles", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = "1",
-                            Name = "Admin",
-                            NormalizedName = "ADMIN"
-                        },
-                        new
-                        {
-                            Id = "2",
-                            Name = "User",
-                            NormalizedName = "USER"
-                        });
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -79,9 +101,8 @@ namespace TaskManagementApi.Migrations
                     b.Property<string>("ClaimValue")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("RoleId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<int>("RoleId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -90,7 +111,7 @@ namespace TaskManagementApi.Migrations
                     b.ToTable("AspNetRoleClaims", (string)null);
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<int>", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -104,9 +125,8 @@ namespace TaskManagementApi.Migrations
                     b.Property<string>("ClaimValue")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -115,7 +135,7 @@ namespace TaskManagementApi.Migrations
                     b.ToTable("AspNetUserClaims", (string)null);
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<int>", b =>
                 {
                     b.Property<string>("LoginProvider")
                         .HasColumnType("nvarchar(450)");
@@ -126,9 +146,8 @@ namespace TaskManagementApi.Migrations
                     b.Property<string>("ProviderDisplayName")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
 
                     b.HasKey("LoginProvider", "ProviderKey");
 
@@ -137,13 +156,13 @@ namespace TaskManagementApi.Migrations
                     b.ToTable("AspNetUserLogins", (string)null);
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<int>", b =>
                 {
-                    b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
 
-                    b.Property<string>("RoleId")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<int>("RoleId")
+                        .HasColumnType("int");
 
                     b.HasKey("UserId", "RoleId");
 
@@ -152,10 +171,10 @@ namespace TaskManagementApi.Migrations
                     b.ToTable("AspNetUserRoles", (string)null);
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<int>", b =>
                 {
-                    b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
 
                     b.Property<string>("LoginProvider")
                         .HasColumnType("nvarchar(450)");
@@ -250,6 +269,37 @@ namespace TaskManagementApi.Migrations
                         });
                 });
 
+            modelBuilder.Entity("TaskManagementApi.Models.TaskAttachment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FileUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("TaskId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UploadedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TaskId");
+
+                    b.ToTable("TaskAttachments");
+                });
+
             modelBuilder.Entity("TaskManagementApi.Models.TaskComment", b =>
                 {
                     b.Property<int>("Id")
@@ -263,13 +313,15 @@ namespace TaskManagementApi.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
 
                     b.Property<int>("TaskId")
                         .HasColumnType("int");
 
-                    b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<int?>("UserId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -278,32 +330,6 @@ namespace TaskManagementApi.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("TaskComments");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Content = "This is a great task!",
-                            CreatedAt = new DateTime(2021, 10, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            TaskId = 1,
-                            UserId = "1"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Content = "I'm making progress on this task.",
-                            CreatedAt = new DateTime(2021, 10, 2, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            TaskId = 1,
-                            UserId = "1"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Content = "I'm excited to start this project.",
-                            CreatedAt = new DateTime(2021, 10, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            TaskId = 2,
-                            UserId = "1"
-                        });
                 });
 
             modelBuilder.Entity("TaskManagementApi.Models.TaskItem", b =>
@@ -318,7 +344,9 @@ namespace TaskManagementApi.Migrations
                         .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
 
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
@@ -330,8 +358,8 @@ namespace TaskManagementApi.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<int?>("UserId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -340,48 +368,6 @@ namespace TaskManagementApi.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("TaskItems");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            CategoryId = 2,
-                            CreatedAt = new DateTime(2021, 10, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Study the basics of ASP.NET Core framework and its components",
-                            IsCompleted = false,
-                            Title = "Learn ASP.NET Core",
-                            UserId = "1"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            CategoryId = 2,
-                            CreatedAt = new DateTime(2021, 10, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Set up a new ASP.NET Core project using Visual Studio or Visual Studio Code",
-                            IsCompleted = false,
-                            Title = "Create a new project",
-                            UserId = "1"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            CategoryId = 2,
-                            CreatedAt = new DateTime(2021, 10, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Implement a new feature based on project requirements",
-                            IsCompleted = false,
-                            Title = "Add a new feature",
-                            UserId = "1"
-                        },
-                        new
-                        {
-                            Id = 4,
-                            CategoryId = 2,
-                            CreatedAt = new DateTime(2021, 10, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Deploy the application to a hosting service like Azure or AWS",
-                            IsCompleted = false,
-                            Title = "Deploy the app",
-                            UserId = "1"
-                        });
                 });
 
             modelBuilder.Entity("TaskManagementApi.Models.TaskLabel", b =>
@@ -397,39 +383,15 @@ namespace TaskManagementApi.Migrations
                     b.HasIndex("LabelId");
 
                     b.ToTable("TaskLabels");
-
-                    b.HasData(
-                        new
-                        {
-                            TaskId = 1,
-                            LabelId = 1
-                        },
-                        new
-                        {
-                            TaskId = 1,
-                            LabelId = 2
-                        },
-                        new
-                        {
-                            TaskId = 2,
-                            LabelId = 2
-                        },
-                        new
-                        {
-                            TaskId = 3,
-                            LabelId = 2
-                        },
-                        new
-                        {
-                            TaskId = 4,
-                            LabelId = 2
-                        });
                 });
 
             modelBuilder.Entity("TaskManagementApi.Models.User", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
@@ -497,36 +459,18 @@ namespace TaskManagementApi.Migrations
                         .HasFilter("[UserName] IS NOT NULL");
 
                     b.ToTable("AspNetUsers", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = "1",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "b9b74542-e18d-42c8-b007-1dab28d002a0",
-                            Email = "admin@example.com",
-                            EmailConfirmed = true,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "ADMIN@EXAMPLE.COM",
-                            NormalizedUserName = "ADMIN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEDtm5Kivi4/T/pA/jcg44eL7ritjJ8CyxvPAuWdfqhCbmht3C2IxIn/ws4oeWJTf6g==",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "STATIC-SECURITY-STAMP-ADMIN",
-                            TwoFactorEnabled = false,
-                            UserName = "admin"
-                        });
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<int>", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<int>", b =>
                 {
                     b.HasOne("TaskManagementApi.Models.User", null)
                         .WithMany()
@@ -535,7 +479,7 @@ namespace TaskManagementApi.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<int>", b =>
                 {
                     b.HasOne("TaskManagementApi.Models.User", null)
                         .WithMany()
@@ -544,9 +488,9 @@ namespace TaskManagementApi.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<int>", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<int>", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -559,13 +503,24 @@ namespace TaskManagementApi.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<int>", b =>
                 {
                     b.HasOne("TaskManagementApi.Models.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("TaskManagementApi.Models.TaskAttachment", b =>
+                {
+                    b.HasOne("TaskManagementApi.Models.TaskItem", "Task")
+                        .WithMany("Attachments")
+                        .HasForeignKey("TaskId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Task");
                 });
 
             modelBuilder.Entity("TaskManagementApi.Models.TaskComment", b =>
@@ -635,6 +590,8 @@ namespace TaskManagementApi.Migrations
 
             modelBuilder.Entity("TaskManagementApi.Models.TaskItem", b =>
                 {
+                    b.Navigation("Attachments");
+
                     b.Navigation("Comments");
 
                     b.Navigation("TaskLabels");

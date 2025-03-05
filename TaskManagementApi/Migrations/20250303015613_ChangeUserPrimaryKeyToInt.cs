@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace TaskManagementApi.Migrations
 {
     /// <inheritdoc />
-    public partial class FixSeeding : Migration
+    public partial class ChangeUserPrimaryKeyToInt : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -17,7 +17,8 @@ namespace TaskManagementApi.Migrations
                 name: "AspNetRoles",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     ConcurrencyStamp = table.Column<string>(type: "nvarchar(max)", nullable: true)
@@ -31,7 +32,8 @@ namespace TaskManagementApi.Migrations
                 name: "AspNetUsers",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -67,6 +69,20 @@ namespace TaskManagementApi.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "IdentityRole",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    NormalizedName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ConcurrencyStamp = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_IdentityRole", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Labels",
                 columns: table => new
                 {
@@ -85,7 +101,7 @@ namespace TaskManagementApi.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    RoleId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    RoleId = table.Column<int>(type: "int", nullable: false),
                     ClaimType = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ClaimValue = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
@@ -106,7 +122,7 @@ namespace TaskManagementApi.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    UserId = table.Column<int>(type: "int", nullable: false),
                     ClaimType = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ClaimValue = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
@@ -128,7 +144,7 @@ namespace TaskManagementApi.Migrations
                     LoginProvider = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     ProviderKey = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     ProviderDisplayName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false)
+                    UserId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -145,8 +161,8 @@ namespace TaskManagementApi.Migrations
                 name: "AspNetUserRoles",
                 columns: table => new
                 {
-                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    RoleId = table.Column<string>(type: "nvarchar(450)", nullable: false)
+                    UserId = table.Column<int>(type: "int", nullable: false),
+                    RoleId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -169,7 +185,7 @@ namespace TaskManagementApi.Migrations
                 name: "AspNetUserTokens",
                 columns: table => new
                 {
-                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    UserId = table.Column<int>(type: "int", nullable: false),
                     LoginProvider = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     Value = table.Column<string>(type: "nvarchar(max)", nullable: true)
@@ -194,7 +210,7 @@ namespace TaskManagementApi.Migrations
                     Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     IsCompleted = table.Column<bool>(type: "bit", nullable: false),
-                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    UserId = table.Column<int>(type: "int", nullable: true),
                     CategoryId = table.Column<int>(type: "int", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETDATE()")
                 },
@@ -222,7 +238,7 @@ namespace TaskManagementApi.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     TaskId = table.Column<int>(type: "int", nullable: false),
-                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    UserId = table.Column<int>(type: "int", nullable: true),
                     Content = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETDATE()")
                 },
@@ -268,20 +284,6 @@ namespace TaskManagementApi.Migrations
                 });
 
             migrationBuilder.InsertData(
-                table: "AspNetRoles",
-                columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
-                values: new object[,]
-                {
-                    { "1", null, "Admin", "ADMIN" },
-                    { "2", null, "User", "USER" }
-                });
-
-            migrationBuilder.InsertData(
-                table: "AspNetUsers",
-                columns: new[] { "Id", "AccessFailedCount", "ConcurrencyStamp", "Email", "EmailConfirmed", "LockoutEnabled", "LockoutEnd", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "SecurityStamp", "TwoFactorEnabled", "UserName" },
-                values: new object[] { "1", 0, "9cbf56f1-eee1-43ce-a6f8-1ec61907db51", "admin@example.com", true, false, null, "ADMIN@EXAMPLE.COM", "ADMIN", "AQAAAAIAAYagAAAAEMtpvMLVjaHbIg3xIV28a2XDxn9YeyNcZeSZQr/dMKqJhOnAV4hbzrihCnmb2CiDOA==", null, false, "STATIC-SECURITY-STAMP-ADMIN", false, "admin" });
-
-            migrationBuilder.InsertData(
                 table: "Categories",
                 columns: new[] { "Id", "Description", "Name" },
                 values: new object[,]
@@ -289,6 +291,15 @@ namespace TaskManagementApi.Migrations
                     { 1, null, "Personal" },
                     { 2, null, "Work" },
                     { 3, null, "Shopping" }
+                });
+
+            migrationBuilder.InsertData(
+                table: "IdentityRole",
+                columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
+                values: new object[,]
+                {
+                    { "1", null, "Admin", "ADMIN" },
+                    { "2", null, "User", "USER" }
                 });
 
             migrationBuilder.InsertData(
@@ -300,39 +311,6 @@ namespace TaskManagementApi.Migrations
                     { 2, "Important" },
                     { 3, "Home" },
                     { 4, "Office" }
-                });
-
-            migrationBuilder.InsertData(
-                table: "TaskItems",
-                columns: new[] { "Id", "CategoryId", "CreatedAt", "Description", "IsCompleted", "Title", "UserId" },
-                values: new object[,]
-                {
-                    { 1, 2, new DateTime(2021, 10, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Study the basics of ASP.NET Core framework and its components", false, "Learn ASP.NET Core", "1" },
-                    { 2, 2, new DateTime(2021, 10, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Set up a new ASP.NET Core project using Visual Studio or Visual Studio Code", false, "Create a new project", "1" },
-                    { 3, 2, new DateTime(2021, 10, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Implement a new feature based on project requirements", false, "Add a new feature", "1" },
-                    { 4, 2, new DateTime(2021, 10, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Deploy the application to a hosting service like Azure or AWS", false, "Deploy the app", "1" }
-                });
-
-            migrationBuilder.InsertData(
-                table: "TaskComments",
-                columns: new[] { "Id", "Content", "CreatedAt", "TaskId", "UserId" },
-                values: new object[,]
-                {
-                    { 1, "This is a great task!", new DateTime(2021, 10, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 1, "1" },
-                    { 2, "I'm making progress on this task.", new DateTime(2021, 10, 2, 0, 0, 0, 0, DateTimeKind.Unspecified), 1, "1" },
-                    { 3, "I'm excited to start this project.", new DateTime(2021, 10, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 2, "1" }
-                });
-
-            migrationBuilder.InsertData(
-                table: "TaskLabels",
-                columns: new[] { "LabelId", "TaskId" },
-                values: new object[,]
-                {
-                    { 1, 1 },
-                    { 2, 1 },
-                    { 2, 2 },
-                    { 2, 3 },
-                    { 2, 4 }
                 });
 
             migrationBuilder.CreateIndex(
@@ -437,6 +415,9 @@ namespace TaskManagementApi.Migrations
 
             migrationBuilder.DropTable(
                 name: "AspNetUserTokens");
+
+            migrationBuilder.DropTable(
+                name: "IdentityRole");
 
             migrationBuilder.DropTable(
                 name: "TaskComments");

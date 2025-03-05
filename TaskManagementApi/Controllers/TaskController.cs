@@ -84,7 +84,7 @@ namespace TaskManagementApi.Controllers
                 }
 
                 var task = _mapper.Map<TaskItem>(createDto);
-                task.UserId = userId;
+                task.UserId = int.Parse(userId);
 
                 await _taskRepository.AddAsync(task);
                 return Ok(task);
@@ -116,7 +116,7 @@ namespace TaskManagementApi.Controllers
                 return NotFound();
             }
 
-            if (existingTask.UserId != userId)
+            if (existingTask.UserId != int.Parse(userId))
             {
                 return Forbid();
             }
@@ -146,7 +146,7 @@ namespace TaskManagementApi.Controllers
                 }
 
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (userId == null || task.UserId != userId)
+                if (userId == null || task.UserId != int.Parse(userId))
                 {
                     return Forbid();
                 }

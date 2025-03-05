@@ -64,7 +64,7 @@ namespace TaskManagementApi.Controllers
                     return NotFound(new { message = "Task not found" });
                 }
 
-                if (task.UserId != userId)
+                if (task.UserId != int.Parse(userId))
                 {
                     return Forbid();
                 }
@@ -104,7 +104,7 @@ namespace TaskManagementApi.Controllers
                     return NotFound(new { message = "Task not found" });
                 }
 
-                if (task.UserId != userId)
+                if (task.UserId != int.Parse(userId))
                 {
                     return Forbid(); 
                 }
