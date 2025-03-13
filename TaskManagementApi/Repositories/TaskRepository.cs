@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace TaskManagementApi.Repositories
 {
-    public class TaskRepository : ITaskRepository<TaskItem>
+    public class TaskRepository : IGenericRepository<TaskItem>
     {
         private readonly TaskContext _context;
 
@@ -13,7 +13,7 @@ namespace TaskManagementApi.Repositories
             _context = context;
         }
 
-        public async Task AddAsync(TaskItem entity)
+        public async Task<TaskItem> AddAsync(TaskItem entity)
         {
             if (entity == null)
             {
@@ -22,6 +22,8 @@ namespace TaskManagementApi.Repositories
 
             await _context.TaskItems.AddAsync(entity);
             await _context.SaveChangesAsync();
+
+            return entity;
         }
 
         public async Task<IEnumerable<TaskItem>> GetAllAsync()

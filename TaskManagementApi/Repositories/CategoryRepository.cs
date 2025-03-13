@@ -4,7 +4,7 @@ using TaskManagementApi.Models;
 
 namespace TaskManagementApi.Repositories
 {
-    public class CategoryRepository : ICategoryRepository<Category>
+    public class CategoryRepository : IGenericRepository<Category>
     {
         private readonly TaskContext _context;
 
@@ -66,5 +66,7 @@ namespace TaskManagementApi.Repositories
             _context.Entry(category).CurrentValues.SetValues(entity);
             await _context.SaveChangesAsync();
         }
+
+
     }
 }

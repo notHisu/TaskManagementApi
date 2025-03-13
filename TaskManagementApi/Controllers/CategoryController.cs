@@ -5,6 +5,7 @@ using TaskManagementApi.Interfaces;
 using TaskManagementApi.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 
 namespace TaskManagementApi.Controllers
 {
@@ -12,10 +13,10 @@ namespace TaskManagementApi.Controllers
     [ApiController]
     public class CategoryController : ControllerBase
     {
-        private readonly ICategoryRepository<Category> _categoryRepository;
+        private readonly IGenericRepository<Category> _categoryRepository;
         private readonly IMapper _mapper;
 
-        public CategoryController(ICategoryRepository<Category> categoryRepository, IMapper mapper)
+        public CategoryController(IGenericRepository<Category> categoryRepository, IMapper mapper)
         {
             _categoryRepository = categoryRepository;
             _mapper = mapper;
@@ -56,6 +57,7 @@ namespace TaskManagementApi.Controllers
             }
         }
 
+        [Authorize]
         [HttpPost(Name = "AddCategory")]
         public async Task<IActionResult> AddCategory([FromBody] CategoryCreateDto createDto)
         {

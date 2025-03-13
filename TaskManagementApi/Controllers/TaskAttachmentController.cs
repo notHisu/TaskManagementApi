@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TaskManagementApi.DTOs;
 using TaskManagementApi.Interfaces;
@@ -10,14 +11,15 @@ namespace TaskManagementApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class TaskAttachmentController : ControllerBase
     {
         private readonly ITaskAttachmentRepository _taskAttachmentRepository;
         private readonly IBlobStorageService _blobStorageService;
         private readonly IMapper _mapper;
-        private readonly ITaskRepository<TaskItem> _taskRepository;
+        private readonly IGenericRepository<TaskItem> _taskRepository;
 
-        public TaskAttachmentController(ITaskAttachmentRepository taskAttachmentRepository, IBlobStorageService blobStorageService, IMapper mapper, ITaskRepository<TaskItem> taskRepository)
+        public TaskAttachmentController(ITaskAttachmentRepository taskAttachmentRepository, IBlobStorageService blobStorageService, IMapper mapper, IGenericRepository<TaskItem> taskRepository)
         {
             _taskAttachmentRepository = taskAttachmentRepository;
             _blobStorageService = blobStorageService;

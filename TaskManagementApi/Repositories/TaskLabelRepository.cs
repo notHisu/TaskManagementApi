@@ -95,5 +95,12 @@ namespace TaskManagementApi.Repositories
             return newTaskLabel;
 
         }
+
+        public async Task<IEnumerable<TaskLabel>> GetTaskLabelsAsync(int taskId)
+        {
+            return await _context.TaskLabels.AsNoTracking()
+                .Where(tl => tl.TaskId == taskId)
+                .ToListAsync();
+        }
     }
 }

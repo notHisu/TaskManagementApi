@@ -5,6 +5,7 @@ using TaskManagementApi.DTOs;
 using TaskManagementApi.Interfaces;
 using TaskManagementApi.Models;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 
 namespace TaskManagementApi.Controllers
 {
@@ -13,12 +14,12 @@ namespace TaskManagementApi.Controllers
     public class TaskLabelController : ControllerBase
     {
         private readonly ITaskLabelRepository<TaskLabel> _taskLabelRepository;
-        private readonly ITaskRepository<TaskItem> _taskRepository;
+        private readonly IGenericRepository<TaskItem> _taskRepository;
         private readonly IMapper _mapper;
 
         public TaskLabelController(
             ITaskLabelRepository<TaskLabel> taskLabelRepository,
-            ITaskRepository<TaskItem> taskRepository,
+            IGenericRepository<TaskItem> taskRepository,
             IMapper mapper)
         {
             _taskLabelRepository = taskLabelRepository;
@@ -26,6 +27,7 @@ namespace TaskManagementApi.Controllers
             _mapper = mapper;
         }
 
+        [Authorize]
         [HttpPost(Name = "AddLabelToTask")]
         public async Task<ActionResult<TaskLabelResponseDto>> AddLabelToTask(TaskLabelCreateDto taskLabelDto)
         {
@@ -79,6 +81,27 @@ namespace TaskManagementApi.Controllers
             }
         }
 
+        [HttpGet("{taskId}")]
+        public async Task<ActionResult<IEnumerable<TaskLabelResponseDto>>>
+            GetLabelsForTask(int taskId)
+        {
+            try
+            {
+                var taskLabels = await _taskLabelRepository.GetTaskLabelsAsync(taskId);
+                var taskLabelDtos = _mapper.Map<IEnumerable<TaskLabelResponseDto>>(taskLabels);
+                return Ok(taskLabelDtos);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { message = ex.Message });
+            }
+        }
+
+        [Authorize]
         [HttpDelete("{taskId}/{labelId}")]
         public async Task<IActionResult> RemoveLabelFromTask(int taskId, int labelId)
         {

@@ -5,7 +5,7 @@ using TaskManagementApi.Models;
 
 namespace TaskManagementApi.Repositories
 {
-    public class TaskCommentRepository : ITaskCommentRepository<TaskComment>
+    public class TaskCommentRepository : IGenericRepository<TaskComment>
     {
         private readonly TaskContext _context;
 

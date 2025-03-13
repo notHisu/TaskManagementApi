@@ -24,9 +24,5 @@ namespace TaskManagementApi.Middlewares
 
             await _next(context);
         }
-
-
-
-
     }
 }

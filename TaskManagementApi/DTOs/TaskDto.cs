@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using TaskManagementApi.DTOs;
 
 namespace TaskManagementApi.Models
 {
@@ -9,7 +10,8 @@ namespace TaskManagementApi.Models
         public string? Description { get; set; }
         public bool IsCompleted { get; set; }
         public int? UserId { get; set; }
-        public int CategoryId { get; set; }
+        public CategoryResponseDto? Category { get; set; }
+        public TaskLabelResponseDto[]? TaskLabels { get; set; } 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 

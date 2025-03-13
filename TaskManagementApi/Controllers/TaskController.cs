@@ -12,25 +12,36 @@ namespace TaskManagementApi.Controllers
     [ApiController]
     public class TaskController : ControllerBase
     {
-        private readonly ITaskRepository<TaskItem> _taskRepository;
+        private readonly IGenericRepository<TaskItem> _taskRepository;
         private readonly UserManager<User> _userManager;
         private readonly IMapper _mapper;
+        private readonly IGenericRepository<Label> _labelRepository;
+        private readonly IGenericRepository<Category> _categoryRepository;
+        private readonly ITaskLabelRepository<TaskLabel> _taskLabelRepository;
 
-        public TaskController(ITaskRepository<TaskItem> taskRepository, UserManager<User> userManager, IMapper mapper)
+        public TaskController(IGenericRepository<TaskItem> taskRepository, IGenericRepository<Label> labelRepository, IGenericRepository<Category> categoryRepository, ITaskLabelRepository<TaskLabel> taskLabelRepository, UserManager<User> userManager, IMapper mapper)
         {
             _taskRepository = taskRepository;
             _userManager = userManager;
             _mapper = mapper;
+            _labelRepository = labelRepository;
+            _categoryRepository = categoryRepository;
+            _taskLabelRepository = taskLabelRepository;
         }
 
         [HttpGet(Name = "GetAllTasks")]
-        [Authorize]
         public async Task<ActionResult<List<TaskResponseDto>>> GetAllTasks()
         {
             try
             {
                 var tasks = await _taskRepository.GetAllAsync();
+                var taskLabel = await _taskLabelRepository.GetAllAsync();
+                foreach (var task in tasks)
+                {
+                    task.TaskLabels = taskLabel.Where(tl => tl.TaskId == task.Id).ToList();
+                }
                 var taskResponse = _mapper.Map<List<TaskResponseDto>>(tasks);
+
                 return Ok(taskResponse);
             }
             catch (Exception ex)

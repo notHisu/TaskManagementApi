@@ -11,15 +11,15 @@ namespace TaskManagementApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+
     public class TaskCommentController : ControllerBase
     {
-        private readonly ITaskCommentRepository<TaskComment> _taskCommentRepository;
-        private readonly ITaskRepository<TaskItem> _taskRepository;
+        private readonly IGenericRepository<TaskComment> _taskCommentRepository;
+        private readonly IGenericRepository<TaskItem> _taskRepository;
         private readonly IMapper _mapper;
 
-        public TaskCommentController(ITaskCommentRepository<TaskComment> taskCommentRepository,
-                                     ITaskRepository<TaskItem> taskRepository,
+        public TaskCommentController(IGenericRepository<TaskComment> taskCommentRepository,
+                                     IGenericRepository<TaskItem> taskRepository,
                                      IMapper mapper)
         {
             _taskCommentRepository = taskCommentRepository;
@@ -42,6 +42,7 @@ namespace TaskManagementApi.Controllers
             }
         }
 
+        [Authorize]
         [HttpPost(Name = "AddCommentToTask")]
         public async Task<ActionResult<TaskCommentResponseDto>> AddCommentToTask(TaskCommentCreateDto taskCommentDto)
         {
@@ -81,6 +82,7 @@ namespace TaskManagementApi.Controllers
             }
         }
 
+        [Authorize]
         [HttpDelete("{id}", Name = "DeleteTaskComment")]
         public async Task<ActionResult> DeleteTaskComment(int id)
         {

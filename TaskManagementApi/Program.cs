@@ -15,11 +15,13 @@ using TaskManagementApi.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddTransient<ITaskRepository<TaskItem>, TaskRepository>();
+builder.Services.AddTransient<IGenericRepository<TaskItem>, TaskRepository>();
+builder.Services.AddTransient<IGenericRepository<TaskComment>, TaskCommentRepository>();
+builder.Services.AddTransient<IGenericRepository<Category>, CategoryRepository>();
+builder.Services.AddTransient<IGenericRepository<Label>, LabelRepository>();
 builder.Services.AddTransient<ITaskLabelRepository<TaskLabel>, TaskLabelRepository>();
-builder.Services.AddTransient<ITaskCommentRepository<TaskComment>, TaskCommentRepository>();
-builder.Services.AddTransient<ICategoryRepository<Category>, CategoryRepository>();
 builder.Services.AddTransient<ITaskAttachmentRepository, TaskAttachmentRepository>();
+
 
 builder.Services.AddSingleton<IBlobStorageService, BlobStorageService>();
 
@@ -35,6 +37,7 @@ builder.Services.AddAutoMapper(typeof(UserMapper).Assembly);
 builder.Services.AddAutoMapper(typeof(CategoryMapper).Assembly);
 builder.Services.AddAutoMapper(typeof(TaskLabelMapper).Assembly);
 builder.Services.AddAutoMapper(typeof(TaskCommentMapper).Assembly);
+builder.Services.AddAutoMapper(typeof(LabelMapper).Assembly);
 
 // Register Identity with API endpoints
 //builder.Services.AddIdentity<User, IdentityRole>()
@@ -49,18 +52,14 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", builder =>
     {
-        builder.WithOrigins("https://localhost:7202")
+        builder.WithOrigins("http://localhost:5173")
                .AllowCredentials()
                .AllowAnyHeader()
                .AllowAnyMethod();
     });
 });
 
-builder.Services.AddControllers()
-    .AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
-    });
+builder.Services.AddControllers();
 
 // Swagger
 builder.Services.AddEndpointsApiExplorer();
